@@ -10,42 +10,31 @@ import {
   StatusBar,
   AsyncStorage,
   RefreshControl,
-  ScrollView,
 } from "react-native";
 import axios from "axios";
 import Loading from "../Loading";
 import Constants from "./../../utils/Constants";
 import { FAB } from "react-native-paper";
 import Toast from "react-native-easy-toast";
-import { useNavigation } from "@react-navigation/native";
 
-//export default function ManifestsForm({ route, navigation }) {
-// const { navigation } = props;
-// const navigation = useNavigation();
 export default function ManifestsForm(props) {
   const { navigation, route } = props;
-  console.log(route);
   const [data, setData] = useState();
-  // const fecha_ = navigation.getParam("fecha");
-  // console.log(fecha_);
   const { carrier, user } = route.params;
-  //const carrier = "INTRALOGISTICA"; //navigation.getParam("carrier");
-  //const user = "julio.garate"; //navigation.getParam("nombre");
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
   const [selected, setSelected] = useState(new Map());
   const { url } = Constants;
   const toastRef = useRef();
-
   const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
-    //console.log("useEffect");
     const getManifests = async () => {
       setIsvisibleLoading(true);
       load();
     };
     getManifests();
     setRefreshing(false);
-    //  rememberTitle();
+    rememberTitle();
   }, []);
 
   const load = async () => {
@@ -67,15 +56,15 @@ export default function ManifestsForm(props) {
       });
   };
 
-  // rememberTitle = async () => {
-  //   try {
-  //     let title = { carrier: carrier, user: user };
-  //     await AsyncStorage.setItem("@localStorage:title", JSON.stringify(title));
-  //   } catch (error) {
-  //     console.log(error);
-  //     toastRef.current.show("Error al guardar Carrier.");
-  //   }
-  // };
+  const rememberTitle = async () => {
+    try {
+      let title = { carrier: carrier, user: user };
+      await AsyncStorage.setItem("@localStorage:title", JSON.stringify(title));
+    } catch (error) {
+      console.log(error);
+      toastRef.current.show("Error al guardar Carrier.");
+    }
+  };
 
   function Item({ id, title, selected, onSelect }) {
     return (
@@ -149,7 +138,6 @@ export default function ManifestsForm(props) {
         extraData={selected}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          //<Loading isVisible={isVisibleLoading} text="Cargando" />
         }
       />
 
@@ -171,7 +159,7 @@ export default function ManifestsForm(props) {
       toastRef.current.show("5 manifiestos máximo");
     } else {
       var fecha_gestion = new Date();
-      navigation.navigate("PendingOrders", {
+      navigation.navigate("pendings", {
         manifests: [...selected.keys()],
         carrier: carrier,
         user: user,
@@ -195,7 +183,6 @@ export default function ManifestsForm(props) {
       <View
         style={{
           height: 1,
-          // width: "100%",
           backgroundColor: "#CED0CE",
         }}
       />
