@@ -28,8 +28,8 @@ export default function ManageOrder(props) {
     user,
     carrierUser,
     fecha,
-    refresh,
-    setRefresh,
+    // refresh,
+    // setRefresh,
   } = route.params;
 
   // console.log(route);

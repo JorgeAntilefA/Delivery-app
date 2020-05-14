@@ -13,6 +13,7 @@ import { SearchBar } from "react-native-elements";
 import axios from "axios";
 import Constants from "./../../utils/Constants";
 import Loading from "../Loading";
+import { useIsFocused } from "@react-navigation/native";
 
 //await time
 // const useDebounce = (value: any, delay: number) => {
@@ -40,7 +41,7 @@ export default function PendingOrdersForm(props) {
   const [filteredCountryList, setFilteredCountryList] = useState();
 
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
-
+  const isFocused = useIsFocused();
   const [data, setData] = useState();
   const { url } = Constants;
   const { manifests, carrier, user } = route.params;
@@ -59,7 +60,7 @@ export default function PendingOrdersForm(props) {
     };
 
     getPendingOrders();
-  }, [manifiestos]);
+  }, [manifiestos, isFocused]);
 
   const load = async () => {
     const params = new URLSearchParams();
@@ -184,8 +185,8 @@ function Order(props) {
           carrier: carrier,
           fecha: fecha,
           user: user,
-          refresh: refresh,
-          setRefresh: setRefresh,
+          //   refresh: refresh,
+          //   setRefresh: setRefresh,
           carrierUser: carrierUser,
         })
       }
