@@ -96,7 +96,7 @@ export default function ManifestsForm(props) {
     setRefreshing(true);
     load();
     console.log("actualizado");
-    setRefreshing(false);
+    //setRefreshing(false);
   }, [refreshing]);
 
   return (
@@ -160,13 +160,10 @@ export default function ManifestsForm(props) {
     } else {
       var fecha_gestion = new Date();
       navigation.navigate("pendings", {
-        screen: "pendientes",
-        params: {
-          manifests: [...selected.keys()],
-          carrier: carrier,
-          user: user,
-          fecha_gestion: fecha_gestion.getTime(),
-        },
+        manifests: [...selected.keys()],
+        carrier: carrier,
+        user: user,
+        fecha_gestion: fecha_gestion.getTime(),
       });
       setSelected(new Map());
     }

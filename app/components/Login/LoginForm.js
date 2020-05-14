@@ -15,9 +15,7 @@ import {
 import { Input, Icon } from "@ui-kitten/components";
 import axios from "axios";
 import Loading from "../Loading";
-//import { withNavigation } from "react-navigation";
-
-//import { TouchableOpacity } from "react-native-gesture-handler";
+import * as Permissions from "expo-permissions";
 import Constants from "./../../utils/Constants";
 import * as Location from "expo-location";
 
@@ -32,6 +30,7 @@ export default function LoginForm(props) {
   const { url } = Constants;
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+
   // const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [value, setValue] = React.useState("");
   useEffect(() => {
@@ -54,6 +53,18 @@ export default function LoginForm(props) {
     getRememberedUser();
 
     (async () => {
+      const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
+      const cameraRollPermission = await Permissions.askAsync(
+        Permissions.CAMERA_ROLL
+      );
+
+      if (
+        cameraPermission.status === "granted" &&
+        cameraRollPermission.status === "granted"
+      ) {
+        setErrorMsg("Error al otorgar el permiso");
+      }
+
       let { status } = await Location.requestPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
@@ -129,7 +140,7 @@ export default function LoginForm(props) {
               toastRef.current.show("Credenciales inválidas");
             } else {
               rememberUser();
-              navigation.navigate("Manifests", {
+              navigation.navigate("manifests", {
                 carrier: response.data.carrier,
                 nombre: response.data.nom,
               });

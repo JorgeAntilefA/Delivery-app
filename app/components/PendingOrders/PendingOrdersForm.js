@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   AsyncStorage,
+  RefreshControl,
 } from "react-native";
 import { SearchBar } from "react-native-elements";
 import axios from "axios";
@@ -32,11 +33,8 @@ import Loading from "../Loading";
 
 // Get the values of the countries and sort is alphabetically
 
-//const PendingOrdersForm = props => {
 export default function PendingOrdersForm(props) {
-  //   const { navigation } = props;
   const { navigation, route } = props;
-  console.log(route);
   const [query, setQuery] = useState("");
   //const debounceQuery = useDebounce(query, 10);
   const [filteredCountryList, setFilteredCountryList] = useState();
@@ -51,51 +49,62 @@ export default function PendingOrdersForm(props) {
   const userP = user;
   const carrierUser = carrier;
   const [refresh, setRefresh] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     console.log("useEffect");
     const getPendingOrders = async () => {
       setIsvisibleLoading(true);
-      const params = new URLSearchParams();
-      params.append("opcion", "getPedidosV3");
-      params.append("manifiestos", manifiestos.toString());
-
-      await axios
-        .post(url, params)
-        .then((response) => {
-          setData(response.data.trim());
-          //   rememberOrders(response.data.trim());
-          //const lowerCaseQuery = debounceQuery.toLowerCase();
-          const newCountries = JSON.parse(response.data.trim()).filter(
-            (country) =>
-              //country.pedido.includes(lowerCaseQuery) &&
-              country.estado_entrega === "Sin Estado"
-          );
-          // .map((country) => ({
-          // ...country,
-          //rank: country.pedido.indexOf(lowerCaseQuery),
-          //}))
-          //.sort((a, b) => a.rank - b.rank);
-
-          setFilteredCountryList(newCountries);
-          setIsvisibleLoading(false);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      load();
     };
 
     getPendingOrders();
   }, [manifiestos]);
 
-  //   rememberOrders = async (bd) => {
-  //     try {
-  //       await AsyncStorage.setItem("@localStorage:dataOrder", bd);
-  //     } catch (error) {
-  //       // console.log(error);
-  //     }
-  //   };
+  const load = async () => {
+    const params = new URLSearchParams();
+    params.append("opcion", "getPedidosV3");
+    params.append("manifiestos", manifiestos.toString());
 
+    await axios
+      .post(url, params)
+      .then((response) => {
+        setData(response.data.trim());
+        rememberOrders(response.data.trim());
+        //const lowerCaseQuery = debounceQuery.toLowerCase();
+        const newCountries = JSON.parse(response.data.trim()).filter(
+          (country) =>
+            //country.pedido.includes(lowerCaseQuery) &&
+            country.estado_entrega === "Sin Estado"
+        );
+        // .map((country) => ({
+        // ...country,
+        //rank: country.pedido.indexOf(lowerCaseQuery),
+        //}))
+        //.sort((a, b) => a.rank - b.rank);
+
+        setFilteredCountryList(newCountries);
+        setIsvisibleLoading(false);
+        setRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const rememberOrders = async (bd) => {
+    try {
+      await AsyncStorage.setItem("@localStorage:dataOrder", bd);
+    } catch (error) {
+      // console.log(error);
+    }
+  };
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    load();
+    console.log("actualizado");
+    //setRefreshing(false);
+  }, [refreshing]);
   return (
     <View>
       <SearchBar
@@ -131,6 +140,9 @@ export default function PendingOrdersForm(props) {
           />
         )}
         ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
       {<Loading isVisible={isVisibleLoading} text="Cargando" />}
     </View>
@@ -164,7 +176,7 @@ function Order(props) {
   return (
     <TouchableOpacity
       onPress={() =>
-        navigation.navigate("ManageOrder", {
+        navigation.navigate("manageOrder", {
           pedido: pedido,
           manifiesto: manifiesto,
           direccion: direccion,

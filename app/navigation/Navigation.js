@@ -5,6 +5,8 @@ import { Icon } from "react-native-elements";
 import LoginScreen from "../screens/Login";
 import ManifestsScreen from "../screens/Manifests";
 import PendingOrderscreen from "../screens/PendingOrders";
+import ManageOrderScreen from "../screens/ManageOrder";
+import PendingOrdersStack from "../navigation/ManageOrderStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -33,7 +35,12 @@ export default function Navigation() {
         />
         <Tab.Screen
           name="pendings"
-          component={PendingOrderscreen}
+          component={PendingOrdersStack}
+          options={{ title: "Pendientes" }}
+        />
+        <Tab.Screen
+          name="manageOrder"
+          component={ManageOrderScreen}
           options={{ title: "Pendientes" }}
         />
       </Tab.Navigator>
