@@ -7,122 +7,85 @@ import {
   TouchableOpacity,
   Image,
   AsyncStorage,
-  RefreshControl,
 } from "react-native";
-import { SearchBar } from "react-native-elements";
-import axios from "axios";
 import Constants from "./../../utils/Constants";
-import Loading from "../Loading";
+import { SearchBar } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
 
-//await time
-// const useDebounce = (value: any, delay: number) => {
-//   const [debounceValue, setDebounceValue] = useState(value);
-
-//   useEffect(() => {
-//     const timer = setTimeout(() => {
-//       setDebounceValue(value);
-//     }, delay);
-
-//     return () => {
-//       clearTimeout(timer);
-//     };
-//   }, [value, delay]);
-
-//   return debounceValue;
-// };
-
-// Get the values of the countries and sort is alphabetically
-
-export default function PendingOrdersForm(props) {
-  const { navigation, route } = props;
-  const [query, setQuery] = useState("");
-  //const debounceQuery = useDebounce(query, 10);
-  const [filteredCountryList, setFilteredCountryList] = useState();
-
-  const [isVisibleLoading, setIsvisibleLoading] = useState(false);
-  const isFocused = useIsFocused();
-  const [data, setData] = useState();
-  const { url } = Constants;
-  const { manifests, carrier, user } = route.params;
-
-  let manifiestos = manifests;
-  const userP = user;
-  const carrierUser = carrier;
-  const [refresh, setRefresh] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
+const useDebounce = (value: any, delay: number) => {
+  const [debounceValue, setDebounceValue] = useState(value);
 
   useEffect(() => {
-    console.log("useEffect");
-    const getPendingOrders = async () => {
-      setIsvisibleLoading(true);
-      load();
+    const timer = setTimeout(() => {
+      setDebounceValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debounceValue;
+};
+
+export default function ManagedOrdersForm(props) {
+  const [query, setQuery] = useState("");
+  const debounceQuery = useDebounce(query, 10);
+  const [filteredCountryList, setFilteredCountryList] = useState();
+  const [isVisibleLoading, setIsvisibleLoading] = useState(false);
+  const [data, setData] = useState();
+  const { url } = Constants;
+  const { navigation, route } = props;
+  const isFocused = useIsFocused();
+  const [userTitle, setUserTitle] = useState();
+  const [carrierTitle, setCarrierTitle] = useState();
+
+  useEffect(() => {
+    const getRememberedOrders = async () => {
+      try {
+        const credentialsUser = await AsyncStorage.getItem(
+          "@localStorage:dataOrder"
+        );
+
+        console.log(credentialsUser);
+        if (credentialsUser !== null) {
+          const lowerCaseQuery = debounceQuery.toLowerCase();
+
+          const newCountries = JSON.parse(credentialsUser)
+            .filter(
+              (country) =>
+                country.pedido.includes(lowerCaseQuery) &&
+                country.estado_entrega !== "Sin Estado"
+            )
+            .map((country) => ({
+              ...country,
+              rank: country.pedido.indexOf(lowerCaseQuery),
+            }))
+            .sort((a, b) => a.rank - b.rank);
+
+          setFilteredCountryList(newCountries);
+        }
+      } catch (error) {
+        console.log(error);
+      }
     };
 
-    getPendingOrders();
-  }, [manifiestos, isFocused]);
-
-  const load = async () => {
-    console.log("load");
-    //();
-    const params = new URLSearchParams();
-    params.append("opcion", "getPedidosV3");
-    params.append("manifiestos", manifiestos.toString());
-
-    await axios
-      .post(url, params)
-      .then((response) => {
-        setData(response.data.trim());
-        rememberOrders(response.data.trim());
-        //const lowerCaseQuery = debounceQuery.toLowerCase();
-
-        const newCountries = JSON.parse(response.data.trim()).filter(
-          (country) =>
-            //country.pedido.includes(lowerCaseQuery) &&
-            country.estado_entrega === "Sin Estado"
-        );
-        // .map((country) => ({
-        // ...country,
-        //rank: country.pedido.indexOf(lowerCaseQuery),
-        //}))
-        //.sort((a, b) => a.rank - b.rank);
-
-        setFilteredCountryList(newCountries);
-        setIsvisibleLoading(false);
-        setRefreshing(false);
-      })
-      .catch((error) => {
+    const getRememberedTitle = async () => {
+      try {
+        const carrierTitle = await AsyncStorage.getItem("@localStorage:title");
+        if (carrierTitle !== null) {
+          setUserTitle(JSON.parse(carrierTitle).user);
+          setCarrierTitle(JSON.parse(carrierTitle).carrier);
+        }
+      } catch (error) {
         console.log(error);
-      });
-    const credentialsUser = await AsyncStorage.getItem(
-      "@localStorage:dataOrder"
-    );
+      }
+    };
 
-    console.log(credentialsUser);
-  };
+    getRememberedOrders();
+    getRememberedTitle();
+  }, [isFocused]);
 
-  const rememberOrders = async (bd) => {
-    try {
-      await AsyncStorage.setItem("@localStorage:dataOrder", bd);
-    } catch (error) {
-      // console.log(error);
-    }
-  };
-
-  const removeOrders = async () => {
-    try {
-      await AsyncStorage.removeItem("@localStorage:dataOrder");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    load();
-    console.log("actualizado");
-    //setRefreshing(false);
-  }, [refreshing]);
   return (
     <View>
       <SearchBar
@@ -139,9 +102,9 @@ export default function PendingOrdersForm(props) {
         }}
       >
         <Text>
-          {userP}
+          {userTitle}
           {" - "}
-          {carrierUser}
+          {carrierTitle}
         </Text>
       </View>
       <FlatList
@@ -151,22 +114,15 @@ export default function PendingOrdersForm(props) {
           <Order
             item={item}
             navigation={navigation}
-            user={userP}
-            carrierUser={carrierUser}
-            refresh={refresh}
-            setRefresh={setRefresh}
+            user={userTitle}
+            carrierUser={carrierTitle}
           />
         )}
         ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
       />
-      {<Loading isVisible={isVisibleLoading} text="Cargando" />}
     </View>
   );
 }
-
 function SeparatorManifest() {
   return (
     <View
@@ -178,7 +134,6 @@ function SeparatorManifest() {
     />
   );
 }
-
 function Order(props) {
   const {
     pedido,
@@ -188,13 +143,14 @@ function Order(props) {
     nombre_cliente,
     carrier,
     fecha,
+    estado_entrega,
   } = props.item;
-  const { navigation, user, carrierUser, refresh, setRefresh } = props;
+  const { navigation, user, carrierUser } = props;
 
   return (
     <TouchableOpacity
       onPress={() =>
-        navigation.navigate("manageOrder", {
+        navigation.navigate("ModifyManagedOrder", {
           pedido: pedido,
           manifiesto: manifiesto,
           direccion: direccion,
@@ -202,9 +158,8 @@ function Order(props) {
           carrier: carrier,
           fecha: fecha,
           user: user,
-          //   refresh: refresh,
-          //   setRefresh: setRefresh,
           carrierUser: carrierUser,
+          estado_entrega: estado_entrega,
         })
       }
     >

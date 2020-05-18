@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import axios from "axios";
 import Constants from "./../../utils/Constants";
 import * as Location from "expo-location";
 import Loading from "../Loading";
+import Toast from "react-native-easy-toast";
 
 export default function ManageOrder(props) {
   const { navigation, route } = props;
@@ -32,8 +33,6 @@ export default function ManageOrder(props) {
     // setRefresh,
   } = route.params;
 
-  // console.log(route);
-
   const [selectedValueState, setSelectedState] = useState("cero");
   const [selectedValueS, setSelectedValueS] = useState([]);
 
@@ -44,20 +43,14 @@ export default function ManageOrder(props) {
   const [imageUrl, setImageUrl] = useState();
   const { url } = Constants;
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
+  const [disableButton, setDisableButton] = useState(false);
 
-  const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
-
-  const [latitude, setLatitude] = useState();
-  const [longitude, setLongitude] = useState();
 
   const { signature } = route.params;
   const { name } = route.params;
   const { rut } = route.params;
-
-  // const signature = "";
-  // const name = "";
-  // const rut = "";
+  const toastRef = useRef();
 
   function getListState() {
     const params = new URLSearchParams();
@@ -121,7 +114,6 @@ export default function ManageOrder(props) {
         setIsvisibleLoading(false);
       }
     }
-    console.log("a");
   };
 
   const listInfo = [
@@ -174,6 +166,7 @@ export default function ManageOrder(props) {
             name: item.iconName,
             type: item.iconType,
             color: "#00a680",
+            size: 20,
           }}
           containerStyle={styles.containerListItem}
         />
@@ -189,9 +182,18 @@ export default function ManageOrder(props) {
       <TouchableOpacity
         style={styles.buttonContainer}
         onPress={() => SaveOrder()}
+        disabled={disableButton ? true : false}
+        activeOpacity={0.5}
       >
         <Text style={styles.buttonText}>Guardar</Text>
       </TouchableOpacity>
+      <Toast
+        style={styles.toast}
+        ref={toastRef}
+        position="center"
+        opacity={0.5}
+      />
+      {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
     </View>
   );
 
@@ -231,8 +233,8 @@ export default function ManageOrder(props) {
   }
 
   function Camera() {
+    // setIsvisibleLoading(false);
     if (!imageUrlBol) {
-      console.log("a");
       return (
         <View>
           <TouchableOpacity onPress={getImageFromCamera}>
@@ -281,7 +283,7 @@ export default function ManageOrder(props) {
       return (
         <View>
           <TouchableOpacity
-            onPress={() => navigation.navigate("DigitalSignature")}
+            onPress={() => navigation.navigate("digitalSignature")}
           >
             <Image
               source={{
@@ -347,53 +349,136 @@ export default function ManageOrder(props) {
     return datetime;
   }
 
+  function base64ImageToBlob(str) {
+    // extract content type and base64 payload from original string
+    var pos = str.indexOf(";base64,");
+    var type = str.substring(5, pos);
+    var b64 = str.substr(pos + 8);
+
+    // decode base64
+    var imageContent = atob(b64);
+
+    // create an ArrayBuffer and a view (as unsigned 8-bit)
+    var buffer = new ArrayBuffer(imageContent.length);
+    var view = new Uint8Array(buffer);
+
+    // fill the view, using the decoded base64
+    for (var n = 0; n < imageContent.length; n++) {
+      view[n] = imageContent.charCodeAt(n);
+    }
+
+    // convert ArrayBuffer to Blob
+    var blob = new Blob([buffer], { type: type });
+
+    return blob;
+  }
+
   async function SaveOrder() {
-    const resultGeo = await getLocation();
-    console.log(resultGeo);
-    let fecha_gestion = getDatetime();
-    let date = new Date();
-    let hour = date.getHours() + ":00";
-    //const params = new URLSearchParams();
+    if (selectedValueState == "cero") {
+      toastRef.current.show("Debes selecciona estado");
+    } else {
+      setIsvisibleLoading(true);
+      const resultGeo = await getLocation();
+      let fecha_gestion = getDatetime();
+      let date = new Date();
+      let hour = date.getHours() + ":00";
 
-    let localUri = imageUrl;
-    let filename = localUri.split("/").pop();
-    let match = /\.(\w+)$/.exec(filename);
-    let type = match ? `image/${match[1]}` : `image`;
+      let localUri;
+      let filename;
+      let match;
+      let type;
 
-    const params = new FormData();
-    params.append("opcion", "guardaPedido");
-    params.append("pedido", pedido);
-    params.append("manifiesto", manifiesto);
-    params.append("fecha_manifiesto", fecha);
-    params.append("hora_gestion", hour);
-    params.append("fecha_gestion", fecha_gestion);
-    params.append("estado_entrega", selectedValueState);
-    params.append("encargado", user);
-    params.append("carrier", carrier);
-    params.append("latitud", resultGeo.coords.latitude);
-    params.append("longitud", resultGeo.coords.longitude);
-    params.append("photo", { uri: localUri, name: filename, type });
+      let localUriSig;
+      let filenameSig;
+      let matchSig;
+      let typeSig;
+      console.log(signature);
+      const params = new FormData();
+      params.append("opcion", "guardaPedido");
+      params.append("pedido", pedido);
+      params.append("manifiesto", manifiesto);
+      params.append("fecha_manifiesto", fecha);
+      params.append("hora_gestion", hour);
+      params.append("fecha_gestion", fecha_gestion);
+      params.append("estado_entrega", selectedValueState);
+      params.append("encargado", user);
+      params.append("carrier", carrier);
+      params.append("latitud", resultGeo.coords.latitude);
+      params.append("longitud", resultGeo.coords.longitude);
+      params.append("recibe_nombre", name ? name : "");
+      params.append("recibe_rut", rut ? name : "");
+      params.append("imgFirma", signature);
+      console.log(imageUrl);
+      if (!imageUrlBol) {
+        localUri = "";
+        filename = "";
+        match = "";
+        type = "";
+      } else {
+        localUri = imageUrl;
+        filename = localUri.split("/").pop();
+        match = /\.(\w+)$/.exec(filename);
+        type = match ? `image/${match[1]}` : `image`;
 
-    console.log(
-      JSON.stringify(resultGeo.coords.latitude) +
-        " " +
-        JSON.stringify(resultGeo.coords.longitude)
-    );
+        params.append("imgPedido", { uri: localUri, name: filename, type });
+      }
 
-    axios
-      .post(url, params, {
-        headers: {
-          "content-type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        // console.log(response);
-        //setRefresh(pedido);
-        navigation.navigate("pendientes");
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+      // if (!signature) {
+      //   localUriSig = "";
+      //   filenameSig = "";
+      //   matchSig = "";
+      //   typeSig = "";
+      // } else {
+      //   localUriSig = signature;
+      //   filenameSig = localUriSig.split("/").pop();
+      //   matchSig = /\.(\w+)$/.exec(filenameSig);
+      //   typeSig = matchSig ? `image/${matchSig[1]}` : `image`;
+
+      //   params.append("imgFirma", {
+      //     uri: localUriSig,
+      //     name: filenameSig,
+      //     typeSig,
+      //   });
+      // }
+
+      // const result = base64ImageToBlob(signature);
+      // console.log(result);
+      // localUriSig = signature;
+      // filenameSig = localUriSig.split("/").pop();
+
+      //   matchSig = /\.(\w+)$/.exec(filenameSig);
+      //   typeSig = matchSig ? `image/${matchSig[1]}` : `image`;
+
+      //   params.append("imgFirma", {
+      //     uri: localUriSig,
+      //     name: filenameSig,
+      //     typeSig,
+      //   });
+      // }
+
+      axios
+        .post(url, params, {
+          headers: {
+            "content-type": "multipart/form-data",
+          },
+        })
+        .then((response) => {
+          // console.log(response);
+          //setRefresh(pedido);
+          navigation.navigate("pendientes");
+          setIsvisibleLoading(false);
+        })
+        .catch((error) => {
+          //console.log();
+          if (isNetworkError(error)) {
+            console.log("Error Conexión: " + error);
+          }
+        });
+    }
+  }
+
+  function isNetworkError(err) {
+    return !!err.isAxiosError && !err.response;
   }
 }
 
@@ -413,7 +498,7 @@ const styles = StyleSheet.create({
   containerListItem: {
     borderBottomColor: "#d8d8d8",
     borderBottomWidth: 1,
-    height: 45,
+    height: 50,
   },
   imageContainer: {
     flex: 1,
@@ -461,6 +546,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     backgroundColor: "#f7c744",
+
     paddingVertical: 15,
     marginTop: 70,
     borderRadius: 15,
@@ -475,5 +561,8 @@ const styles = StyleSheet.create({
   },
   customer: {
     alignItems: "center",
+  },
+  toast: {
+    marginTop: 100,
   },
 });

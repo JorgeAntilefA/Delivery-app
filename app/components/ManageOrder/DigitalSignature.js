@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { StyleSheet, Text, View, Image } from "react-native";
 import Signature from "react-native-signature-canvas";
 import { Input } from "@ui-kitten/components";
+import base64 from "react-native-base64";
+import utf8 from "utf8";
 
 export default function SignatureScreen(props) {
-  console.log(props);
   const { navigation } = props;
   const [signature, setSignature] = useState(null);
   const [name, setName] = useState("");
@@ -12,13 +13,35 @@ export default function SignatureScreen(props) {
 
   const handleSignature = (signature) => {
     setSignature(signature);
-    console.log(signature);
+    // base64(signature);
+    // let a = signature.replace("data:image/png;base64,", "");
+
+    // var text = utf8.decode(a);
+    // console.log(b64toBlob(signature));
+    // const contentType = "image/png";
+    // const b64Data =
+    //   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
+
+    // const blob = (b64Data, contentType);
+    // const blobUrl = URL.createObjectURL(blob);
+    // console.log(blobUrl);
     navigation.navigate("manageOrder", {
       signature: signature,
       name: name,
       rut: rut,
     });
   };
+
+  // function b64toBlob(dataURI) {
+  //   var byteString = atob(dataURI.split(",")[1]);
+  //   var ab = new ArrayBuffer(byteString.length);
+  //   var ia = new Uint8Array(ab);
+
+  //   for (var i = 0; i < byteString.length; i++) {
+  //     ia[i] = byteString.charCodeAt(i);
+  //   }
+  //   return new Blob([ab], { type: "image/jpeg" });
+  // }
 
   const handleEmpty = () => {
     console.log("Empty");

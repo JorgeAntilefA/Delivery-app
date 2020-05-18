@@ -45,6 +45,8 @@ export default function ManifestsForm(props) {
     await axios
       .post(url, params)
       .then((response) => {
+        // console.log(response);
+
         Platform.OS === "ios"
           ? setData(response.data)
           : setData(JSON.parse(response.data.trim()));

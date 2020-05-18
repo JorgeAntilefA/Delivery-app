@@ -19,27 +19,3 @@ export default function ManageOrderStack() {
     </Stack.Navigator>
   );
 }
-// const PendingOrdersScreenStacks = createStackNavigator({
-//   PendingOrders: {
-//     screen: PendingScreen,
-//     navigationOptions: () => ({
-//       headerShown: false,
-//     }),
-//   },
-//   ManageOrder: {
-//     screen: ManageOrderScreen,
-
-//     navigationOptions: () => ({
-//       headerShown: false,
-//     }),
-//   },
-//   DigitalSignature: {
-//     screen: SignatureScreen,
-
-//     navigationOptions: () => ({
-//       headerShown: false,
-//     }),
-//   },
-// });
-
-// export default PendingOrdersScreenStacks;

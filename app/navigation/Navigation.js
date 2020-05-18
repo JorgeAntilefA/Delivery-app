@@ -4,9 +4,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Icon } from "react-native-elements";
 import LoginScreen from "../screens/Login";
 import ManifestsScreen from "../screens/Manifests";
-import PendingOrderscreen from "../screens/PendingOrders";
 import ManageOrderScreen from "../screens/ManageOrder";
 import PendingOrdersStack from "../navigation/ManageOrderStack";
+import ManagedOrdersStack from "../navigation/ManagedOrderStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -39,9 +39,9 @@ export default function Navigation() {
           options={{ title: "Pendientes" }}
         />
         <Tab.Screen
-          name="manageOrder"
-          component={ManageOrderScreen}
-          options={{ title: "Pendientes" }}
+          name="managedOrder"
+          component={ManagedOrdersStack}
+          options={{ title: "Gestionados" }}
         />
       </Tab.Navigator>
     </NavigationContainer>
@@ -53,6 +53,15 @@ function screenOptions(route, color) {
 
   switch (route.name) {
     case "login":
+      iconName = "compass-outline";
+      break;
+    case "manifests":
+      iconName = "compass-outline";
+      break;
+    case "pendings":
+      iconName = "compass-outline";
+      break;
+    case "managedOrder":
       iconName = "compass-outline";
       break;
     default:
