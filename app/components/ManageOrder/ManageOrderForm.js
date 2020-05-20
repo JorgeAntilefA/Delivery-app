@@ -349,30 +349,6 @@ export default function ManageOrder(props) {
     return datetime;
   }
 
-  function base64ImageToBlob(str) {
-    // extract content type and base64 payload from original string
-    var pos = str.indexOf(";base64,");
-    var type = str.substring(5, pos);
-    var b64 = str.substr(pos + 8);
-
-    // decode base64
-    var imageContent = atob(b64);
-
-    // create an ArrayBuffer and a view (as unsigned 8-bit)
-    var buffer = new ArrayBuffer(imageContent.length);
-    var view = new Uint8Array(buffer);
-
-    // fill the view, using the decoded base64
-    for (var n = 0; n < imageContent.length; n++) {
-      view[n] = imageContent.charCodeAt(n);
-    }
-
-    // convert ArrayBuffer to Blob
-    var blob = new Blob([buffer], { type: type });
-
-    return blob;
-  }
-
   async function SaveOrder() {
     if (selectedValueState == "cero") {
       toastRef.current.show("Debes selecciona estado");
@@ -423,39 +399,6 @@ export default function ManageOrder(props) {
         params.append("imgPedido", { uri: localUri, name: filename, type });
       }
 
-      // if (!signature) {
-      //   localUriSig = "";
-      //   filenameSig = "";
-      //   matchSig = "";
-      //   typeSig = "";
-      // } else {
-      //   localUriSig = signature;
-      //   filenameSig = localUriSig.split("/").pop();
-      //   matchSig = /\.(\w+)$/.exec(filenameSig);
-      //   typeSig = matchSig ? `image/${matchSig[1]}` : `image`;
-
-      //   params.append("imgFirma", {
-      //     uri: localUriSig,
-      //     name: filenameSig,
-      //     typeSig,
-      //   });
-      // }
-
-      // const result = base64ImageToBlob(signature);
-      // console.log(result);
-      // localUriSig = signature;
-      // filenameSig = localUriSig.split("/").pop();
-
-      //   matchSig = /\.(\w+)$/.exec(filenameSig);
-      //   typeSig = matchSig ? `image/${matchSig[1]}` : `image`;
-
-      //   params.append("imgFirma", {
-      //     uri: localUriSig,
-      //     name: filenameSig,
-      //     typeSig,
-      //   });
-      // }
-
       axios
         .post(url, params, {
           headers: {
@@ -463,8 +406,6 @@ export default function ManageOrder(props) {
           },
         })
         .then((response) => {
-          // console.log(response);
-          //setRefresh(pedido);
           navigation.navigate("pendientes");
           setIsvisibleLoading(false);
         })
