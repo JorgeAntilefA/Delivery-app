@@ -35,7 +35,7 @@ export default function ManifestsForm(props) {
     getManifests();
     setRefreshing(false);
     rememberTitle();
-  }, []);
+  }, [carrier]);
 
   const load = async () => {
     const params = new URLSearchParams();
@@ -45,7 +45,7 @@ export default function ManifestsForm(props) {
     await axios
       .post(url, params)
       .then((response) => {
-        // console.log(response);
+        //console.log(response);
 
         Platform.OS === "ios"
           ? setData(response.data)
@@ -97,8 +97,8 @@ export default function ManifestsForm(props) {
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     load();
-    console.log("actualizado");
-    setRefreshing(false);
+    setSelected(new Map());
+    //setRefreshing(false);
   }, [refreshing]);
 
   return (
@@ -155,24 +155,28 @@ export default function ManifestsForm(props) {
   );
 
   function ValidateManifests() {
-    if (selected.size == 0) {
-      toastRef.current.show("Debes seleccionar manifiesto");
-    } else if (selected.size >= 5) {
-      toastRef.current.show("5 manifiestos máximo");
-    } else {
-      var fecha_gestion = new Date();
-      navigation.navigate("pendings", {
-        screen: "pendientes",
-        params: {
-          manifests: [...selected.keys()],
-          carrier: carrier,
-          user: user,
-          fecha_gestion: fecha_gestion.getTime(),
-        },
-      });
-      setSelected(new Map());
-    }
+    console.log("click");
+    setIsvisibleLoading(true);
+    // if (selected.size == 0) {
+    //   toastRef.current.show("Debes seleccionar manifiesto");
+    // } else if (selected.size >= 5) {
+    //   toastRef.current.show("5 manifiestos máximo");
+    // } else {
+    //var fecha_gestion = new Date();
+    navigation.navigate("pendings", {
+      screen: "pendientes",
+      params: {
+        manifests: [...selected.keys()],
+        carrier: carrier,
+        user: user,
+        //fecha_gestion: fecha_gestion.getTime(),
+      },
+    });
+    setSelected(new Map());
+    setIsvisibleLoading(false);
+    // }
   }
+
   function ManifestButton() {
     return (
       <FAB

@@ -53,14 +53,16 @@ export default function PendingOrdersForm(props) {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    console.log("useEffect");
-    const getPendingOrders = async () => {
-      setIsvisibleLoading(true);
-      load();
-    };
+    if (isFocused) {
+      const getPendingOrders = async () => {
+        setIsvisibleLoading(true);
+        load();
 
-    getPendingOrders();
-  }, [manifiestos, isFocused]);
+        console.log("focus");
+      };
+      getPendingOrders();
+    }
+  }, [isFocused]);
 
   const load = async () => {
     console.log("load");
@@ -79,7 +81,7 @@ export default function PendingOrdersForm(props) {
         const newCountries = JSON.parse(response.data.trim()).filter(
           (country) =>
             //country.pedido.includes(lowerCaseQuery) &&
-            country.estado_entrega === "Sin Estado"
+            country.estado_entrega === "Sin Estado" && country.solicitud == "1"
         );
         // .map((country) => ({
         // ...country,
@@ -94,11 +96,6 @@ export default function PendingOrdersForm(props) {
       .catch((error) => {
         console.log(error);
       });
-    const credentialsUser = await AsyncStorage.getItem(
-      "@localStorage:dataOrder"
-    );
-
-    console.log(credentialsUser);
   };
 
   const rememberOrders = async (bd) => {
@@ -124,7 +121,7 @@ export default function PendingOrdersForm(props) {
     //setRefreshing(false);
   }, [refreshing]);
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <SearchBar
         containerStyle={{ marginTop: 0 }}
         placeholder="Buscar pedido"
@@ -189,7 +186,7 @@ function Order(props) {
     carrier,
     fecha,
   } = props.item;
-  const { navigation, user, carrierUser, refresh, setRefresh } = props;
+  const { navigation, user, carrierUser } = props;
 
   return (
     <TouchableOpacity

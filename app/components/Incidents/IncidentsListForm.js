@@ -5,11 +5,10 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  Image,
   AsyncStorage,
 } from "react-native";
 import Constants from "./../../utils/Constants";
-import { SearchBar } from "react-native-elements";
+import { SearchBar, Icon } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
 
 const useDebounce = (query) => {
@@ -28,12 +27,10 @@ const useDebounce = (query) => {
   return debounceValue;
 };
 
-export default function ManagedOrdersForm(props) {
+export default function IncidentsListForm(props) {
   const [query, setQuery] = useState("");
   const debounceQuery = useDebounce(query);
   const [filteredCountryList, setFilteredCountryList] = useState();
-  const [isVisibleLoading, setIsvisibleLoading] = useState(false);
-  const [data, setData] = useState();
   const { url } = Constants;
   const { navigation, route } = props;
   const isFocused = useIsFocused();
@@ -47,16 +44,12 @@ export default function ManagedOrdersForm(props) {
           "@localStorage:dataOrder"
         );
 
-        console.log(credentialsUser);
+        // console.log(credentialsUser);
         if (credentialsUser !== null) {
           const lowerCaseQuery = debounceQuery.toLowerCase();
 
           const newCountries = JSON.parse(credentialsUser)
-            .filter(
-              (country) =>
-                country.pedido.includes(lowerCaseQuery) &&
-                country.estado_entrega !== "Sin Estado"
-            )
+            .filter((country) => country.solicitud != "1")
             .map((country) => ({
               ...country,
               rank: country.pedido.indexOf(lowerCaseQuery),
@@ -87,7 +80,7 @@ export default function ManagedOrdersForm(props) {
   }, [isFocused]);
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <SearchBar
         containerStyle={{ marginTop: 0 }}
         placeholder="Buscar pedido"
@@ -143,14 +136,16 @@ function Order(props) {
     nombre_cliente,
     carrier,
     fecha,
-    estado_entrega,
+    tipo_solicitud,
+    id_solicitudes_carrier_sac_estado,
+    observacion_sac,
   } = props.item;
   const { navigation, user, carrierUser } = props;
 
   return (
     <TouchableOpacity
       onPress={() =>
-        navigation.navigate("ModifyManagedOrder", {
+        navigation.navigate("responseIncidents", {
           pedido: pedido,
           manifiesto: manifiesto,
           direccion: direccion,
@@ -159,7 +154,8 @@ function Order(props) {
           fecha: fecha,
           user: user,
           carrierUser: carrierUser,
-          estado_entrega: estado_entrega,
+          tipo_solicitud: tipo_solicitud,
+          observacion_sac: observacion_sac,
         })
       }
     >
@@ -169,17 +165,27 @@ function Order(props) {
           <Text style={styles.manifiesto}>{manifiesto} </Text>
         </View>
         <View style={styles.inline}>
-          <Image
-            source={require("../../../assets/google.png")}
-            style={styles.logo}
-            resizeMode="contain"
-            //backgroundColor="red"
-          />
           <View style={styles.containerInfo}>
-            <Text style={styles.comuna}>{comuna} </Text>
-            <Text style={styles.direccion}>{direccion}</Text>
-            <Text style={styles.nombre_cliente}>{nombre_cliente}</Text>
+            <Text style={styles.solicitud}>{tipo_solicitud}</Text>
+            <Text style={styles.nombre_cliente}>{nombre_cliente} </Text>
           </View>
+          {id_solicitudes_carrier_sac_estado === "3" ? (
+            <Icon
+              name="check-circle"
+              color="#00a2dd"
+              size={50}
+
+              //backgroundColor="red"
+            />
+          ) : (
+            <Icon
+              name="update"
+              color="#CE0000"
+              size={50}
+
+              //backgroundColor="red"
+            />
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -215,16 +221,16 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
   },
   containerInfo: {
-    width: "80%",
+    width: "75%",
     marginLeft: 10,
   },
-  comuna: {
+  solicitud: {
     fontWeight: "bold",
     fontSize: 18,
     //width: "77%",
-    width: "73%",
+    width: "75%",
     textAlign: "center",
-    backgroundColor: "#DF7401",
+    backgroundColor: "#E10F0F",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#fff",
@@ -234,18 +240,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   nombre_cliente: {
-    fontSize: 17,
+    fontWeight: "bold",
+    fontSize: 18,
+    //width: "77%",
+    width: "75%",
+    textAlign: "center",
+    backgroundColor: "#D77230",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#fff",
   },
   item: {
     padding: 10,
   },
   title: {
     fontSize: 32,
-  },
-  logo: {
-    width: 50,
-    height: 56,
-    // width: 40,
-    // height: 46
   },
 });

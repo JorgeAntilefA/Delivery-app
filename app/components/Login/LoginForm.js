@@ -75,6 +75,15 @@ export default function LoginForm(props) {
     })();
   }, []);
 
+  const removeTitle = async () => {
+    try {
+      await AsyncStorage.removeItem("@localStorage:credentials");
+      return true;
+    } catch (exception) {
+      return false;
+    }
+  };
+
   let text = "Waiting..";
   if (errorMsg) {
     text = errorMsg;

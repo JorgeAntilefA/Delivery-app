@@ -1,12 +1,12 @@
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, StackActions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Icon } from "react-native-elements";
 import LoginScreen from "../screens/Login";
 import ManifestsScreen from "../screens/Manifests";
-import ManageOrderScreen from "../screens/ManageOrder";
 import PendingOrdersStack from "../navigation/ManageOrderStack";
 import ManagedOrdersStack from "../navigation/ManagedOrderStack";
+import IncidentsStack from "../navigation/IncidentsStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -43,6 +43,13 @@ export default function Navigation() {
           component={ManagedOrdersStack}
           options={{ title: "Gestionados" }}
         />
+        <Tab.Screen
+          name="incidenList"
+          component={IncidentsStack}
+          options={{ title: "Solicitudes" }}
+
+          //initialParams={{ sobrante: "Sobrante" }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
@@ -53,16 +60,19 @@ function screenOptions(route, color) {
 
   switch (route.name) {
     case "login":
-      iconName = "compass-outline";
+      iconName = "undo";
       break;
     case "manifests":
-      iconName = "compass-outline";
+      iconName = "table-large";
       break;
     case "pendings":
-      iconName = "compass-outline";
+      iconName = "truck-fast";
       break;
     case "managedOrder":
-      iconName = "compass-outline";
+      iconName = "truck-check";
+      break;
+    case "incidenList":
+      iconName = "alert-octagon-outline";
       break;
     default:
       break;

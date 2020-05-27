@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   Picker,
   Image,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { Icon, ListItem } from "react-native-elements";
 import * as Permissions from "expo-permissions";
@@ -17,6 +17,7 @@ import Constants from "./../../utils/Constants";
 import * as Location from "expo-location";
 import Loading from "../Loading";
 import Toast from "react-native-easy-toast";
+import { Input } from "@ui-kitten/components";
 
 export default function ManageOrder(props) {
   const { navigation, route } = props;
@@ -24,13 +25,10 @@ export default function ManageOrder(props) {
     direccion,
     pedido,
     nombre_cliente,
-    carrier,
     manifiesto,
     user,
     carrierUser,
     fecha,
-    // refresh,
-    // setRefresh,
   } = route.params;
 
   const [selectedValueState, setSelectedState] = useState("cero");
@@ -43,7 +41,7 @@ export default function ManageOrder(props) {
   const [imageUrl, setImageUrl] = useState();
   const { url } = Constants;
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
-  const [disableButton, setDisableButton] = useState(false);
+  const [observacion, setObservacion] = useState("");
 
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -55,7 +53,7 @@ export default function ManageOrder(props) {
   function getListState() {
     const params = new URLSearchParams();
     params.append("opcion", "getActivaEstados");
-    params.append("carrier", carrier);
+    params.append("carrier", carrierUser);
 
     return axios.post(url, params);
   }
@@ -63,7 +61,7 @@ export default function ManageOrder(props) {
   function getListIncidence() {
     const params = new URLSearchParams();
     params.append("opcion", "getTiposSolicitudes");
-    params.append("carrier", carrier);
+    params.append("carrier", carrierUser);
 
     return axios.post(url, params);
   }
@@ -143,58 +141,70 @@ export default function ManageOrder(props) {
     },
   ];
   return (
-    <View>
-      <View
-        style={{
-          height: 20,
-          backgroundColor: "#FACC2E",
-          alignItems: "center",
-        }}
-      >
-        <Text>
-          {user}
-          {" - "}
-          {carrierUser}
-        </Text>
-      </View>
-      <Map />
-      {listInfo.map((item, index) => (
-        <ListItem
-          key={index}
-          title={item.text}
-          leftIcon={{
-            name: item.iconName,
-            type: item.iconType,
-            color: "#00a680",
-            size: 20,
+    <ScrollView>
+      <View style={styles.container}>
+        <View
+          style={{
+            height: 20,
+            backgroundColor: "#FACC2E",
+            alignItems: "center",
           }}
-          containerStyle={styles.containerListItem}
+        >
+          <Text>
+            {user}
+            {" - "}
+            {carrierUser}
+          </Text>
+        </View>
+        <Map />
+        {listInfo.map((item, index) => (
+          <ListItem
+            key={index}
+            title={item.text}
+            leftIcon={{
+              name: item.iconName,
+              type: item.iconType,
+              color: "#00a680",
+              size: 20,
+            }}
+            containerStyle={styles.containerListItem}
+          />
+        ))}
+        <Text style={styles.pedido}>Gestión del Pedido</Text>
+        <PickerState />
+        <PickerIncidences />
+        <Input
+          style={styles.inputTextArea}
+          placeholder="Observacion"
+          multiline={true}
+          numberOfLines={4}
+          placeholderColor="#c4c3cb"
+          value={observacion}
+          onChange={(e) => setObservacion(e.nativeEvent.text)}
         />
-      ))}
-      <Text style={styles.pedido}>Gestión del Pedido</Text>
-      <PickerState />
-      <PickerIncidences />
-      <Customer />
-      <View style={styles.imageContainer}>
-        <Camera />
-        <Signature />
+        <Customer />
+        <View style={styles.imageContainer}>
+          <Camera />
+          <Signature />
+        </View>
+        <View style={styles.imageContainer}>
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={() => SaveOrder()}
+            activeOpacity={0.5}
+          >
+            <Text style={styles.buttonText}>Guardar</Text>
+          </TouchableOpacity>
+        </View>
+        <Toast
+          style={styles.toast}
+          ref={toastRef}
+          position="center"
+          opacity={0.5}
+        />
+        {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
       </View>
-      <TouchableOpacity
-        style={styles.buttonContainer}
-        onPress={() => SaveOrder()}
-        disabled={disableButton ? true : false}
-        activeOpacity={0.5}
-      >
-        <Text style={styles.buttonText}>Guardar</Text>
-      </TouchableOpacity>
-      <Toast
-        style={styles.toast}
-        ref={toastRef}
-        position="center"
-        opacity={0.5}
-      />
-      {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
-    </View>
+    </ScrollView>
   );
 
   function PickerState() {
@@ -218,18 +228,28 @@ export default function ManageOrder(props) {
       <View style={styles.picker}>
         <Picker
           selectedValue={selectedValueIncidence}
-          onValueChange={(itemValue, itemIndex) =>
-            setSelectedIncidence(itemValue)
-          }
+          onValueChange={(itemValue, itemIndex) => c(itemValue)}
         >
           <Picker.Item label="Seleccione Solicitud..." value="cero" />
 
           {selectedValueI.map((item, key) => (
-            <Picker.Item label={item.estado} value={item.estado} key={key} />
+            <Picker.Item label={item.tipo} value={item.tipo} key={key} />
           ))}
         </Picker>
       </View>
     );
+  }
+
+  function c(itemValue) {
+    navigation.navigate("incidenList", {
+      screen: "incidents",
+      params: {
+        solicitud: itemValue,
+        order: pedido,
+        orderManifiesto: manifiesto,
+      },
+    });
+    console.log(itemValue);
   }
 
   function Camera() {
@@ -364,10 +384,6 @@ export default function ManageOrder(props) {
       let match;
       let type;
 
-      let localUriSig;
-      let filenameSig;
-      let matchSig;
-      let typeSig;
       console.log(signature);
       const params = new FormData();
       params.append("opcion", "guardaPedido");
@@ -378,7 +394,7 @@ export default function ManageOrder(props) {
       params.append("fecha_gestion", fecha_gestion);
       params.append("estado_entrega", selectedValueState);
       params.append("encargado", user);
-      params.append("carrier", carrier);
+      params.append("carrier", carrierUser);
       params.append("latitud", resultGeo.coords.latitude);
       params.append("longitud", resultGeo.coords.longitude);
       params.append("recibe_nombre", name ? name : "");
@@ -426,9 +442,9 @@ export default function ManageOrder(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: 650,
   },
   pedido: {
-    //fontWeight: "bold",
     fontSize: 15,
     textAlign: "center",
     backgroundColor: "#000000",
@@ -444,7 +460,6 @@ const styles = StyleSheet.create({
   imageContainer: {
     flex: 1,
     flexDirection: "row",
-    margin: 5,
     justifyContent: "center",
   },
   image: {
@@ -457,11 +472,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     margin: 5,
     justifyContent: "center",
-  },
-  image: {
-    margin: 5,
-    width: 60,
-    height: 60,
   },
   viewImages: {
     flexDirection: "row",
@@ -487,11 +497,11 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     backgroundColor: "#f7c744",
-
     paddingVertical: 15,
-    marginTop: 70,
+    marginTop: 5,
     borderRadius: 15,
-    marginLeft: 40,
+    marginBottom: 18,
+
     width: "80%",
   },
   buttonText: {
@@ -505,5 +515,10 @@ const styles = StyleSheet.create({
   },
   toast: {
     marginTop: 100,
+  },
+  inputTextArea: {
+    height: 50,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
 });
