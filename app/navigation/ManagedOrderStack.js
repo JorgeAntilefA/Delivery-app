@@ -2,6 +2,7 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import ManagedOrdersScreen from "../screens/ManagedOrders";
 import ModifyManagedOrderScreen from "../screens/ModifyManagedOrder";
+import SignatureScreen from "../components/ManagedOrders/DigitalSignature";
 
 const Stack = createStackNavigator();
 
@@ -17,6 +18,7 @@ export default function ManageOrderStack() {
         name="modifyManagedOrder"
         component={ModifyManagedOrderScreen}
       />
+      <Stack.Screen name="digitalSignatureM" component={SignatureScreen} />
     </Stack.Navigator>
   );
 }

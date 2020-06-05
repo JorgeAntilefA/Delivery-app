@@ -10,6 +10,8 @@ import {
 import Constants from "./../../utils/Constants";
 import { SearchBar, Icon } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
+import { FAB } from "react-native-paper";
+import { countries } from "countries-list";
 
 const useDebounce = (query) => {
   const [debounceValue, setDebounceValue] = useState(query);
@@ -17,12 +19,12 @@ const useDebounce = (query) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounceValue(query);
-    }, 100);
+    }, 200);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [query, 100]);
+  }, [query, 200]);
 
   return debounceValue;
 };
@@ -31,11 +33,11 @@ export default function IncidentsListForm(props) {
   const [query, setQuery] = useState("");
   const debounceQuery = useDebounce(query);
   const [filteredCountryList, setFilteredCountryList] = useState();
-  const { url } = Constants;
-  const { navigation, route } = props;
-  const isFocused = useIsFocused();
+
   const [userTitle, setUserTitle] = useState();
   const [carrierTitle, setCarrierTitle] = useState();
+  const { url } = Constants;
+  const { navigation, route } = props;
 
   useEffect(() => {
     const getRememberedOrders = async () => {
@@ -43,13 +45,17 @@ export default function IncidentsListForm(props) {
         const credentialsUser = await AsyncStorage.getItem(
           "@localStorage:dataOrder"
         );
-
+        //setFilteredCountryList(JSON.parse(credentialsUser));
         // console.log(credentialsUser);
         if (credentialsUser !== null) {
           const lowerCaseQuery = debounceQuery.toLowerCase();
 
           const newCountries = JSON.parse(credentialsUser)
-            .filter((country) => country.solicitud != "1")
+            .filter(
+              (country) =>
+                country.solicitud != "1" &&
+                country.pedido.includes(lowerCaseQuery)
+            )
             .map((country) => ({
               ...country,
               rank: country.pedido.indexOf(lowerCaseQuery),
@@ -77,7 +83,21 @@ export default function IncidentsListForm(props) {
 
     getRememberedOrders();
     getRememberedTitle();
-  }, [isFocused]);
+  }, [debounceQuery]);
+
+  function ManifestButton() {
+    return (
+      <FAB
+        style={styles.fab}
+        label="S"
+        onPress={() =>
+          navigation.navigate("incidents", {
+            solicitud: "Sobrante",
+          })
+        }
+      />
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -87,6 +107,7 @@ export default function IncidentsListForm(props) {
         onChangeText={setQuery}
         value={query}
       />
+
       <View
         style={{
           height: 20,
@@ -113,6 +134,7 @@ export default function IncidentsListForm(props) {
         )}
         ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
       />
+      <ManifestButton />
     </View>
   );
 }
@@ -255,5 +277,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
+  },
+  fab: {
+    position: "absolute",
+    margin: 36,
+    right: 0,
+    bottom: 0,
+    fontWeight: "bold",
   },
 });

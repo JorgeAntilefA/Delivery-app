@@ -77,7 +77,10 @@ export default function ManifestsForm(props) {
           { backgroundColor: selected ? "#82FA58" : "#FFFFFF" },
         ]}
       >
-        <Text style={styles.title}>{title.n_man}</Text>
+        <Text style={styles.title}>
+          {title.n_man} {"     "}
+          {title.fecha}
+        </Text>
         <Text style={styles.subtitle}>{title.nombre_manifiesto}</Text>
       </TouchableOpacity>
     );
@@ -155,7 +158,6 @@ export default function ManifestsForm(props) {
   );
 
   function ValidateManifests() {
-    console.log("click");
     setIsvisibleLoading(true);
     // if (selected.size == 0) {
     //   toastRef.current.show("Debes seleccionar manifiesto");

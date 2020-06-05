@@ -11,7 +11,11 @@ import {
 import { Input } from "@ui-kitten/components";
 import Constants from "./../../utils/Constants";
 import axios from "axios";
-import { useIsFocused, StackActions } from "@react-navigation/native";
+import {
+  useIsFocused,
+  CommonActions,
+  StackActions,
+} from "@react-navigation/native";
 import Toast from "react-native-easy-toast";
 import Loading from "../Loading";
 
@@ -20,7 +24,7 @@ export default function IncidentsForm(props) {
   const { navigation, route } = props;
   const { solicitud, order, orderManifiesto } = route.params;
 
-  const [tracking, setTracking] = useState("");
+  const [tracking, setTracking] = useState();
   const [observacion, setObservacion] = useState("");
   const [selectedValueCarrier, setSelectedCarrier] = useState("cero");
   const [selectedValueC, setSelectedValueC] = useState([]);
@@ -36,8 +40,6 @@ export default function IncidentsForm(props) {
   const [carrierTitle, setCarrierTitle] = useState();
   const [disableBotton, setDisableBotton] = useState();
   const toastRef = useRef();
-
-  console.log(solicitud);
 
   function getListCarrier() {
     const params = new URLSearchParams();
@@ -71,7 +73,7 @@ export default function IncidentsForm(props) {
         });
     };
     getAxios();
-  }, [isFocused]);
+  }, []);
 
   const getRememberedTitle = async () => {
     try {
@@ -141,7 +143,25 @@ export default function IncidentsForm(props) {
         <Text style={styles.text}>Transporte</Text>
         <PickerCarrier />
         <Text style={styles.text}>N° Envio</Text>
-        <InputTracking />
+        {solicitud == "Devolver OP" ? (
+          <Input
+            style={styles.inputForm}
+            placeholder="N° Envio"
+            keyboardType="numeric"
+            placeholderColor="#c4c3cb"
+            value={tracking}
+            onChange={(e) => setTracking(e.nativeEvent.text)}
+          />
+        ) : (
+          <Input
+            style={styles.inputForm}
+            placeholder="N° Envio"
+            keyboardType="numeric"
+            placeholderColor="#c4c3cb"
+            disabled={true}
+            //value={tracking}
+          />
+        )}
         <Text style={styles.text}>Observacion</Text>
         <Input
           style={styles.inputTextArea}
@@ -170,31 +190,6 @@ export default function IncidentsForm(props) {
     </ScrollView>
   );
 
-  function InputTracking() {
-    if (solicitud == "Devolver OP") {
-      return (
-        <Input
-          style={styles.inputForm}
-          placeholder="N° Envio"
-          keyboardType="numeric"
-          placeholderColor="#c4c3cb"
-          value={tracking}
-          onChange={(e) => setTracking(e.nativeEvent.text)}
-        />
-      );
-    } else {
-      return (
-        <Input
-          style={styles.inputForm}
-          placeholder="N° Envio"
-          keyboardType="numeric"
-          placeholderColor="#c4c3cb"
-          disabled={true}
-          value={tracking}
-        />
-      );
-    }
-  }
   function PickerCarrier() {
     solicitud == "Devolver OP"
       ? setDisableBotton(true)
@@ -209,6 +204,7 @@ export default function IncidentsForm(props) {
           enabled={disableBotton}
         >
           <Picker.Item label="Seleccione Carrier..." value="cero" />
+          <Picker.Item label={"" + carrierTitle} value={"" + carrierTitle} />
 
           {selectedValueC.map((item, key) => (
             <Picker.Item label={item.carrier} value={item.carrier} key={key} />
@@ -219,36 +215,62 @@ export default function IncidentsForm(props) {
   }
 
   async function SaveIncidence() {
-    if (solicitud == "") {
-      toastRef.current.show("Debes seleccionar incidencia");
+    if (solicitud == "Devolver OP" && tracking == "") {
+      toastRef.current.show("Debes ingresar Numero de Envio");
     } else {
-      setIsvisibleLoading(true);
+      if (solicitud == "Devolver OP" && selectedValueCarrier == "cero") {
+        toastRef.current.show("Debes seleccionar Transporte");
+      } else {
+        if (solicitud == "") {
+          toastRef.current.show("Debes seleccionar incidencia");
+        } else {
+          setIsvisibleLoading(true);
 
-      const params = new FormData();
-      params.append("opcion", "guardaSolicitud");
-      params.append("tipo", solicitud);
-      params.append("carrier", carrierTitle);
-      params.append("pedido", pedido);
-      params.append("manifiesto", manifiesto);
-      params.append("carrier_externo", selectedValueCarrier);
-      params.append("tracking", tracking);
-      params.append("observacion", observacion);
-
-      console.log(params);
-      await axios
-        .post(url, params)
-        .then((response) => {
-          navigation.navigate("pendientes");
-
-          setIsvisibleLoading(false);
-        })
-        .catch((error) => {
-          //console.log();
-          if (isNetworkError(error)) {
-            console.log("Error Conexión: " + error);
+          const params = new FormData();
+          params.append("opcion", "guardaSolicitud");
+          params.append("tipo", solicitud);
+          params.append("carrier", carrierTitle);
+          params.append("pedido", pedido);
+          params.append("manifiesto", manifiesto);
+          if (selectedValueCarrier != "cero") {
+            params.append("carrier_externo", selectedValueCarrier);
           }
-        });
+          params.append("carrier_externo", selectedValueCarrier);
+          params.append("tracking", tracking);
+          params.append("observacion", observacion);
+
+          console.log(params);
+          await axios
+            .post(url, params)
+            .then((response) => {
+              // navigation.navigate("pendings", {
+              //   screen: "pendientes",
+              //   params: {
+              //     manifests: manifiesto,
+              //   },
+              // });
+
+              navigation.dispatch(StackActions.popToTop());
+
+              navigation.dispatch(resetAction);
+              setPedido("");
+              setManifiesto("");
+              setSelectedCarrier("");
+              setIsvisibleLoading(false);
+            })
+            .catch((error) => {
+              //console.log();
+              if (isNetworkError(error)) {
+                console.log("Error Conexión: " + error);
+              }
+            });
+        }
+      }
     }
+  }
+
+  function isNetworkError(err) {
+    return !!err.isAxiosError && !err.response;
   }
 }
 

@@ -7,42 +7,21 @@ import {
   TouchableOpacity,
   Image,
   AsyncStorage,
+  TouchableWithoutFeedback,
   RefreshControl,
 } from "react-native";
-import { SearchBar } from "react-native-elements";
+import { Input, Icon } from "@ui-kitten/components";
 import axios from "axios";
 import Constants from "./../../utils/Constants";
 import Loading from "../Loading";
 import { useIsFocused } from "@react-navigation/native";
 
-//await time
-// const useDebounce = (value: any, delay: number) => {
-//   const [debounceValue, setDebounceValue] = useState(value);
-
-//   useEffect(() => {
-//     const timer = setTimeout(() => {
-//       setDebounceValue(value);
-//     }, delay);
-
-//     return () => {
-//       clearTimeout(timer);
-//     };
-//   }, [value, delay]);
-
-//   return debounceValue;
-// };
-
-// Get the values of the countries and sort is alphabetically
-
 export default function PendingOrdersForm(props) {
   const { navigation, route } = props;
-  const [query, setQuery] = useState("");
-  //const debounceQuery = useDebounce(query, 10);
-  const [filteredCountryList, setFilteredCountryList] = useState();
 
+  const [data, setData] = useState();
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
   const isFocused = useIsFocused();
-  const [data, setData] = useState();
   const { url } = Constants;
   const { manifests, carrier, user } = route.params;
 
@@ -52,52 +31,44 @@ export default function PendingOrdersForm(props) {
   const [refresh, setRefresh] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [text, setText] = useState();
+  const [arrayholder, setArrayholder] = useState([]);
+
   useEffect(() => {
     if (isFocused) {
       const getPendingOrders = async () => {
         setIsvisibleLoading(true);
-        load();
+        const params = new URLSearchParams();
+        params.append("opcion", "getPedidosV3");
+        params.append("manifiestos", manifiestos.toString());
 
-        console.log("focus");
+        await axios
+          .post(url, params)
+          .then((response) => {
+            console.log(response);
+            setData(JSON.parse(response.data.trim()));
+            setArrayholder(JSON.parse(response.data.trim()));
+            rememberOrders(response.data.trim());
+            console.log(data);
+            //setData()
+            setIsvisibleLoading(false);
+            setRefreshing(false);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       };
       getPendingOrders();
     }
   }, [isFocused]);
 
-  const load = async () => {
-    console.log("load");
-    //();
-    const params = new URLSearchParams();
-    params.append("opcion", "getPedidosV3");
-    params.append("manifiestos", manifiestos.toString());
+  function searchData(text) {
+    const newData = arrayholder.filter((item) => {
+      return item.pedido.indexOf(text) > -1;
+    });
 
-    await axios
-      .post(url, params)
-      .then((response) => {
-        setData(response.data.trim());
-        rememberOrders(response.data.trim());
-        //const lowerCaseQuery = debounceQuery.toLowerCase();
-
-        const newCountries = JSON.parse(response.data.trim()).filter(
-          (country) =>
-            //country.pedido.includes(lowerCaseQuery) &&
-            country.estado_entrega === "Sin Estado" && country.solicitud == "1"
-        );
-        // .map((country) => ({
-        // ...country,
-        //rank: country.pedido.indexOf(lowerCaseQuery),
-        //}))
-        //.sort((a, b) => a.rank - b.rank);
-
-        setFilteredCountryList(newCountries);
-        setIsvisibleLoading(false);
-        setRefreshing(false);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
+    setData(newData);
+  }
   const rememberOrders = async (bd) => {
     try {
       await AsyncStorage.setItem("@localStorage:dataOrder", bd);
@@ -116,18 +87,28 @@ export default function PendingOrdersForm(props) {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    load();
+    // load();
     console.log("actualizado");
     //setRefreshing(false);
   }, [refreshing]);
+
+  const renderIcon = (props) => (
+    <TouchableWithoutFeedback>
+      <Icon {...props} name="search" />
+    </TouchableWithoutFeedback>
+  );
   return (
     <View style={{ flex: 1 }}>
-      <SearchBar
-        containerStyle={{ marginTop: 0 }}
-        placeholder="Buscar pedido"
-        onChangeText={setQuery}
-        value={query}
-      />
+      <View style={styles.containerInput}>
+        <Input
+          style={styles.inputForm}
+          onChangeText={(text) => searchData(text)}
+          keyboardType="numeric"
+          //value={(text) => setText(text)}
+          accessoryLeft={renderIcon}
+          placeholder="Busqueda"
+        />
+      </View>
       <View
         style={{
           height: 20,
@@ -143,7 +124,7 @@ export default function PendingOrdersForm(props) {
       </View>
       <FlatList
         keyExtractor={(item, index) => `${index}`}
-        data={filteredCountryList}
+        data={data}
         renderItem={({ item }) => (
           <Order
             item={item}
@@ -199,8 +180,6 @@ function Order(props) {
           carrier: carrier,
           fecha: fecha,
           user: user,
-          //   refresh: refresh,
-          //   setRefresh: setRefresh,
           carrierUser: carrierUser,
         })
       }
@@ -231,6 +210,25 @@ function Order(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  SectionStyle: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 0.5,
+    borderColor: "#000",
+    height: 40,
+    borderRadius: 5,
+    margin: 10,
+  },
+  ImageStyle: {
+    padding: 10,
+    margin: 5,
+    height: 25,
+    width: 25,
+    resizeMode: "stretch",
+    alignItems: "center",
   },
   inline: {
     flex: 1,
@@ -289,5 +287,14 @@ const styles = StyleSheet.create({
     height: 56,
     // width: 40,
     // height: 46
+  },
+  containerInput: {
+    backgroundColor: "#272626",
+  },
+  inputForm: {
+    height: 30,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
 });

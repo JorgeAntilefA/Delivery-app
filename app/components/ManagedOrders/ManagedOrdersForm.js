@@ -47,7 +47,38 @@ export default function ManagedOrdersForm(props) {
           "@localStorage:dataOrder"
         );
 
-        console.log(credentialsUser);
+        //console.log(JSON.parse(credentialsUser));
+
+        // const prueba = JSON.parse(credentialsUser);
+        //console.log(prueba);
+        // const index = prueba.findIndex(
+        //   (x) => x.pedido === "179597679295987182094005"
+        // );
+
+        // console.log(index);
+        // if (index !== undefined) prueba.splice(index, 1);
+
+        // console.log(prueba);
+
+        // var a =
+        //   '{"carrier": "KWT_prueba",' +
+        //   '"comuna": "prueba",' +
+        //   '"direccion": "LAS DELICIAS 355 Piso 3 salud",' +
+        //   '"estado_entrega": "Sin Estado",' +
+        //   '"fecha": "2020-06-03",' +
+        //   '"id_solicitudes_carrier_sac_estado": null,' +
+        //   '"manifiesto": "63674",' +
+        //   '"nombre_cliente": "CATALINA BENAVENTE REYES",' +
+        //   '"nombre_manifiesto": "KWT RUTA NACIMIENTO",' +
+        //   '"observacion_sac": null,' +
+        //   '"pedido": "179597679295987182094005",' +
+        //   '"solicitud": "1",' +
+        //   '"tipo_solicitud": null }';
+        // var obj = JSON.parse(a);
+        // prueba.push(obj);
+
+        // console.log(prueba);
+
         if (credentialsUser !== null) {
           const lowerCaseQuery = debounceQuery.toLowerCase();
 
@@ -144,13 +175,15 @@ function Order(props) {
     carrier,
     fecha,
     estado_entrega,
+    recibe_nombre,
+    recibe_rut,
   } = props.item;
   const { navigation, user, carrierUser } = props;
 
   return (
     <TouchableOpacity
       onPress={() =>
-        navigation.navigate("ModifyManagedOrder", {
+        navigation.navigate("modifyManagedOrder", {
           pedido: pedido,
           manifiesto: manifiesto,
           direccion: direccion,
@@ -160,6 +193,8 @@ function Order(props) {
           user: user,
           carrierUser: carrierUser,
           estado_entrega: estado_entrega,
+          recibe_nombre: recibe_nombre,
+          recibe_rut: recibe_rut,
         })
       }
     >
@@ -247,5 +282,12 @@ const styles = StyleSheet.create({
     height: 56,
     // width: 40,
     // height: 46
+  },
+  inputForm: {
+    height: 35,
+    marginBottom: 10,
+    color: "rgb(32,53,70)",
+    paddingHorizontal: 10,
+    // backgroundColor: "rgba(255,255,255,0.2)",
   },
 });

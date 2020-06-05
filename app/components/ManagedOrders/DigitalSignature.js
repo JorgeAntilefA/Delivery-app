@@ -2,8 +2,6 @@ import React, { useState, useRef } from "react";
 import { StyleSheet, Text, View, Image } from "react-native";
 import Signature from "react-native-signature-canvas";
 import { Input } from "@ui-kitten/components";
-import base64 from "react-native-base64";
-import utf8 from "utf8";
 import Toast from "react-native-easy-toast";
 
 export default function SignatureScreen(props) {
@@ -49,33 +47,22 @@ export default function SignatureScreen(props) {
     setSignature(signature);
 
     if (Fn.validaRut(rut)) {
-      if (option == "manageOrder") {
-        navigation.navigate("manageOrder", {
-          signature: signature,
-          name: name,
-          rut: rut,
-        });
-      } else {
-        navigation.navigate("managedOrder", {
-          screen: "modifyManagedOrder",
-          params: {
-            signature: signature,
-            name: name,
-            rut: rut,
-            direccion: direccion,
-            pedido: pedido,
-            nombre_cliente: nombre_cliente,
-            carrier: carrier,
-            manifiesto: manifiesto,
-            user: user,
-            carrierUser: carrierUser,
-            fecha: fecha,
-            estado_entrega: estado_entrega,
-            recibe_nombre: recibe_nombre,
-            recibe_rut: recibe_rut,
-          },
-        });
-      }
+      navigation.navigate("modifyManagedOrder", {
+        signature: signature,
+        name: name,
+        rut: rut,
+        direccion: direccion,
+        pedido: pedido,
+        nombre_cliente: nombre_cliente,
+        carrier: carrier,
+        manifiesto: manifiesto,
+        user: user,
+        carrierUser: carrierUser,
+        fecha: fecha,
+        estado_entrega: estado_entrega,
+        recibe_nombre: recibe_nombre,
+        recibe_rut: recibe_rut,
+      });
     } else {
       toastRef.current.show("Rut ingresado es inválido");
     }

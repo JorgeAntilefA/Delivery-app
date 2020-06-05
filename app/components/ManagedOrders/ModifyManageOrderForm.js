@@ -6,12 +6,18 @@ import {
   StyleSheet,
   Picker,
   Image,
+  ScrollView,
   TouchableOpacity,
 } from "react-native";
 import { Icon, ListItem } from "react-native-elements";
 import axios from "axios";
 import Constants from "./../../utils/Constants";
 import * as Location from "expo-location";
+import Loading from "../Loading";
+import { Input } from "@ui-kitten/components";
+import * as ImagePicker from "expo-image-picker";
+import * as Permissions from "expo-permissions";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function ModifyManagedOrder(props) {
   const { navigation, route } = props;
@@ -26,26 +32,29 @@ export default function ModifyManagedOrder(props) {
     carrierUser,
     fecha,
     estado_entrega,
+    recibe_nombre,
+    recibe_rut,
   } = route.params;
 
   const [selectedValueState, setSelectedState] = useState(estado_entrega);
+  const [selectedValueStateFinal, setSelectedStateFinal] = useState();
   const [selectedValueS, setSelectedValueS] = useState([]);
-
-  const [selectedValueIncidence, setSelectedIncidence] = useState("cero");
-  const [selectedValueI, setSelectedValueI] = useState([]);
-
+  const [imageUrlBol, setImageUrlBol] = useState(false);
   const [imageUrl, setImageUrl] = useState();
-  const { url } = Constants;
 
-  const [location, setLocation] = useState(null);
+  const { url } = Constants;
+  const [isVisibleLoading, setIsvisibleLoading] = useState(false);
+  const [isVisibleLoadingCamera, setIsvisibleLoadingCamera] = useState(false);
+
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const [latitude, setLatitude] = useState(null);
-  const [longitude, setLongitude] = useState(null);
+  const [nameCli, setNameCli] = useState();
+  const [rutCli, setRutCli] = useState();
 
-  const signature = navigation.getParam("signature");
-  const name = navigation.getParam("name");
-  const rut = navigation.getParam("rut");
+  const { signature } = route.params;
+  const { name } = route.params;
+  const { rut } = route.params;
+  const isFocused = useIsFocused();
 
   function getListState() {
     const params = new URLSearchParams();
@@ -55,24 +64,23 @@ export default function ModifyManagedOrder(props) {
     return axios.post(url, params);
   }
 
-  function getListIncidence() {
-    const params = new URLSearchParams();
-    params.append("opcion", "getTiposSolicitudes");
-    params.append("carrier", carrier);
+  // if (!isFocused) {
+  //   navigation.goBack();
+  //   console.log("out");
 
-    return axios.post(url, params);
-  }
+  //   // signature = null;
+  //   // name = null;
+  // }
 
   useEffect(() => {
     const getManifests = async () => {
       await axios
-        .all([getListState(), getListIncidence()])
+        .all([getListState()])
         .then(
           axios.spread((...responses) => {
+            //console.log(responses[0]);
             const responseListState = responses[0];
-            const responseListIncidence = responses[1];
             setSelectedValueS(JSON.parse(responseListState.data.trim()));
-            setSelectedValueI(JSON.parse(responseListIncidence.data.trim()));
           })
         )
         .catch((errors) => {
@@ -82,106 +90,108 @@ export default function ModifyManagedOrder(props) {
     getManifests();
   }, []);
 
-  const listInfo = [
-    {
-      text: manifiesto,
-      iconName: "file-document-outline",
-      iconType: "material-community",
-      action: null,
-    },
-    {
-      text: pedido,
-      iconName: "gift",
-      iconType: "material-community",
-      action: null,
-    },
-    {
-      text: direccion,
-      iconName: "map-marker",
-      iconType: "material-community",
-      action: null,
-    },
-    {
-      text: nombre_cliente,
-      iconName: "account-circle",
-      iconType: "material-community",
-      action: null,
-    },
-  ];
-  return (
-    <View>
-      <View
-        style={{
-          height: 20,
-          backgroundColor: "#FACC2E",
-          alignItems: "center",
-        }}
-      >
-        <Text>
-          {user}
-          {" - "}
-          {carrierUser}
-        </Text>
-      </View>
-      {listInfo.map((item, index) => (
-        <ListItem
-          key={index}
-          title={item.text}
-          leftIcon={{
-            name: item.iconName,
-            type: item.iconType,
-            color: "#00a680",
-          }}
-          containerStyle={styles.containerListItem}
-        />
-      ))}
-      <Text style={styles.pedido}>Modificar Estado del Pedido</Text>
-      <PickerState />
-      <PickerIncidences />
-
-      <Customer />
-      <TouchableOpacity
-        style={styles.buttonContainer}
-        onPress={() => SaveOrder()}
-      >
-        <Text style={styles.buttonText}>Guardar</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  function PickerState() {
-    return (
-      <View style={styles.picker}>
-        <Picker
-          selectedValue={selectedValueState}
-          onValueChange={(itemValue, itemIndex) => setSelectedState(itemValue)}
-        >
-          <Picker.Item label="Seleccione Estado..." value="cero" />
-          {selectedValueS.map((item, key) => (
-            <Picker.Item label={item.estado} value={item.estado} key={key} />
-          ))}
-        </Picker>
-      </View>
+  const getImageFromCamera = async () => {
+    setIsvisibleLoadingCamera(true);
+    const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
+    const cameraRollPermission = await Permissions.askAsync(
+      Permissions.CAMERA_ROLL
     );
-  }
+    // console.log(cameraPermission);
+    if (
+      cameraPermission.status === "granted" &&
+      cameraRollPermission.status === "granted"
+    ) {
+      let captureImage = await ImagePicker.launchCameraAsync({
+        allowEditing: true,
+        aspect: [4, 3],
+        quality: 0.1,
+      });
+      if (!captureImage.cancelled) {
+        //let x = "require(" + captureImage.url + ")";
+        setImageUrlBol(true);
+        setImageUrl(captureImage.uri);
+        setIsvisibleLoadingCamera(false);
+      } else {
+        setIsvisibleLoadingCamera(false);
+      }
+    }
+  };
 
-  function PickerIncidences() {
-    return (
-      <View style={styles.picker}>
-        <Picker
-          selectedValue={selectedValueIncidence}
-          onValueChange={(itemValue, itemIndex) =>
-            setSelectedIncidence(itemValue)
+  function Signature() {
+    if (!signature) {
+      return (
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("digitalSignatureM", {
+              direccion: direccion,
+              pedido: pedido,
+              nombre_cliente: nombre_cliente,
+              carrier: carrier,
+              manifiesto: manifiesto,
+              user: user,
+              carrierUser: carrierUser,
+              fecha: fecha,
+              estado_entrega: estado_entrega,
+              recibe_nombre: recibe_nombre,
+              recibe_rut: recibe_rut,
+            })
           }
         >
-          <Picker.Item label="Seleccione Solicitud..." value="cero" />
-
-          {selectedValueI.map((item, key) => (
-            <Picker.Item label={item.estado} value={item.estado} key={key} />
-          ))}
-        </Picker>
-      </View>
-    );
+          <View>
+            <Icon
+              type="material-community"
+              name="fountain-pen"
+              color="#7a7a7a"
+              containerStyle={styles.containerIcon}
+              onPress={() =>
+                navigation.navigate("digitalSignatureM", {
+                  direccion: direccion,
+                  pedido: pedido,
+                  nombre_cliente: nombre_cliente,
+                  carrier: carrier,
+                  manifiesto: manifiesto,
+                  user: user,
+                  carrierUser: carrierUser,
+                  fecha: fecha,
+                  estado_entrega: selectedValueStateFinal,
+                  recibe_nombre: recibe_nombre,
+                  recibe_rut: recibe_rut,
+                })
+              }
+            />
+          </View>
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <View>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("digitalSignatureM", {
+                direccion: direccion,
+                pedido: pedido,
+                nombre_cliente: nombre_cliente,
+                carrier: carrier,
+                manifiesto: manifiesto,
+                user: user,
+                carrierUser: carrierUser,
+                fecha: fecha,
+                estado_entrega: estado_entrega,
+                recibe_nombre: recibe_nombre,
+                recibe_rut: recibe_rut,
+              })
+            }
+          >
+            <Image
+              source={{
+                uri: signature,
+              }}
+              style={styles.image}
+            />
+          </TouchableOpacity>
+        </View>
+      );
+    }
   }
 
   function Customer() {
@@ -205,28 +215,184 @@ export default function ModifyManagedOrder(props) {
     }
   }
 
+  function EditOrder() {
+    if (selectedValueState == "Entregado") {
+      return (
+        <View>
+          <Input
+            style={styles.inputForm}
+            placeholder={!rutCli ? "11111111-1" : rutCli}
+            placeholderColor="#c4c3cb"
+            value={rutCli}
+            onChange={(e) => setRutCli(e.nativeEvent.text)}
+          />
+          <Input
+            style={styles.inputForm}
+            placeholder={!nameCli ? "Cliente" : nameCli}
+            placeholderColor="#c4c3cb"
+            value={nameCli}
+            onChange={(e) => setName(e.nativeEvent.text)}
+          />
+        </View>
+      );
+    } else {
+      return (
+        <View>
+          <Customer />
+          <View style={styles.imageContainer}>
+            <Camera />
+            <Signature />
+          </View>
+        </View>
+      );
+    }
+  }
+
+  const listInfo = [
+    {
+      text: manifiesto + " - " + fecha,
+      iconName: "file-document-outline",
+      iconType: "material-community",
+      action: null,
+    },
+    {
+      text: pedido,
+      iconName: "gift",
+      iconType: "material-community",
+      action: null,
+    },
+    {
+      text: direccion,
+      iconName: "map-marker",
+      iconType: "material-community",
+      action: null,
+    },
+    {
+      text: nombre_cliente,
+      iconName: "account-circle",
+      iconType: "material-community",
+      action: null,
+    },
+  ];
+
+  return (
+    <ScrollView>
+      <View style={styles.container}>
+        <View
+          style={{
+            height: 20,
+            backgroundColor: "#FACC2E",
+            alignItems: "center",
+          }}
+        >
+          <Text>
+            {user}
+            {" - "}
+            {carrierUser}
+          </Text>
+        </View>
+        {listInfo.map((item, index) => (
+          <ListItem
+            key={index}
+            title={item.text}
+            leftIcon={{
+              name: item.iconName,
+              type: item.iconType,
+              color: "#00a680",
+            }}
+            containerStyle={styles.containerListItem}
+          />
+        ))}
+        <Text style={styles.pedido}>Modificar Estado del Pedido</Text>
+        <PickerState />
+        <EditOrder />
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={() => SaveOrder()}
+        >
+          <Text style={styles.buttonText}>Guardar</Text>
+        </TouchableOpacity>
+        {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
+      </View>
+    </ScrollView>
+  );
+
+  function Camera() {
+    if (!imageUrlBol) {
+      return (
+        <View>
+          <TouchableOpacity onPress={getImageFromCamera}>
+            <Icon
+              type="material-community"
+              name="camera"
+              color="#7a7a7a"
+              containerStyle={styles.containerIcon}
+              onPress={getImageFromCamera}
+            />
+            {
+              <Loading
+                isVisible={isVisibleLoadingCamera}
+                text="Cargando Foto"
+              />
+            }
+          </TouchableOpacity>
+        </View>
+      );
+    } else {
+      return (
+        <View>
+          <TouchableOpacity onPress={getImageFromCamera}>
+            <Image
+              source={{
+                uri: imageUrl,
+              }}
+              style={styles.image}
+            />
+          </TouchableOpacity>
+          {<Loading isVisible={isVisibleLoadingCamera} text="Cargando Foto" />}
+        </View>
+      );
+    }
+  }
+
+  function PickerState() {
+    return (
+      <View style={styles.picker}>
+        <Picker
+          selectedValue={
+            selectedValueStateFinal
+              ? selectedValueStateFinal
+              : selectedValueState
+          }
+          onValueChange={(itemValue, itemIndex) =>
+            setSelectedStateFinal(itemValue)
+          }
+        >
+          <Picker.Item label="Seleccione Estado..." value="cero" />
+          {selectedValueS.map((item, key) => (
+            <Picker.Item label={item.estado} value={item.estado} key={key} />
+          ))}
+        </Picker>
+      </View>
+    );
+  }
+
   function getLocation() {
-    (async () => {
-      let { status } = await Location.requestPermissionsAsync();
+    return new Promise((resolve) => {
+      let { status } = Location.requestPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
       }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    })();
-
-    if (errorMsg) {
-      setLatitude("0.0");
-      setLongitude("0.0");
-    } else if (location) {
-      setLatitude(JSON.stringify(location.coords.latitude));
-      setLongitude(JSON.stringify(location.coords.longitude));
-    }
+      let location = Location.getCurrentPositionAsync({});
+      resolve(location);
+    });
   }
 
   function getDatetime() {
     let date = new Date().getDate(); //Current Date
+    if (date < 10) {
+      date = "0" + date;
+    }
     let month = new Date().getMonth() + 1; //Current Month
     if (month < 10) {
       month = "0" + month;
@@ -245,66 +411,77 @@ export default function ModifyManagedOrder(props) {
     return datetime;
   }
 
-  function SaveOrder() {
-    getLocation();
-    let fecha_gestion = getDatetime();
-    let date = new Date();
-    let hour = date.getHours() + ":00";
-    //const params = new URLSearchParams();
+  async function SaveOrder() {
+    if (selectedValueState == "cero") {
+      toastRef.current.show("Debes selecciona estado");
+    } else {
+      setIsvisibleLoading(true);
+      const resultGeo = await getLocation();
+      let fecha_gestion = getDatetime();
 
-    let localUri = imageUrl;
-    let filename = localUri.split("/").pop();
-    let match = /\.(\w+)$/.exec(filename);
-    let type = match ? `image/${match[1]}` : `image`;
+      let date = new Date();
+      let hour = date.getHours() + ":00";
 
-    const params = new FormData();
-    params.append("opcion", "guardaPedido");
-    params.append("pedido", pedido);
-    params.append("manifiesto", manifiesto);
-    params.append("fecha_manifiesto", fecha);
-    params.append("hora_gestion", hour);
-    params.append("fecha_gestion", fecha_gestion);
-    params.append("estado_entrega", selectedValueState);
-    params.append("encargado", user);
-    params.append("carrier", carrier);
-    params.append("latitud", latitude);
-    params.append("longitud", longitude);
-    params.append("photo", { uri: localUri, name: filename, type });
+      let localUri;
+      let filename;
+      let match;
+      let type;
+      console.log(selectedValueStateFinal);
+      const params = new FormData();
+      params.append("opcion", "guardaPedido");
+      params.append("pedido", pedido);
+      params.append("manifiesto", manifiesto);
+      params.append("fecha_manifiesto", fecha);
+      params.append("hora_gestion", hour);
+      params.append("fecha_gestion", fecha_gestion);
+      params.append(
+        "estado_entrega",
+        selectedValueStateFinal ? selectedValueStateFinal : selectedValueState
+      );
+      params.append("encargado", user);
+      params.append("carrier", carrierUser);
+      params.append("latitud", resultGeo.coords.latitude);
+      params.append("longitud", resultGeo.coords.longitude);
+      params.append("recibe_nombre", name);
+      params.append("recibe_rut", rut);
+      params.append("imgFirma", signature);
 
-    console.log(
-      pedido +
-        " " +
-        manifiesto +
-        " " +
-        fecha +
-        " " +
-        hour +
-        " " +
-        fecha_gestion +
-        " " +
-        selectedValueState +
-        " " +
-        user +
-        " " +
-        carrier +
-        " " +
-        latitude +
-        " " +
-        longitude
-    );
+      if (!imageUrlBol) {
+        localUri = "";
+        filename = "";
+        match = "";
+        type = "";
+      } else {
+        localUri = imageUrl;
+        filename = localUri.split("/").pop();
+        match = /\.(\w+)$/.exec(filename);
+        type = match ? `image/${match[1]}` : `image`;
 
-    axios
-      .post(url, params, {
-        headers: {
-          "content-type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        console.log(response);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+        params.append("imgPedido", { uri: localUri, name: filename, type });
+      }
+
+      axios
+        .post(url, params, {
+          headers: {
+            "content-type": "multipart/form-data",
+          },
+        })
+        .then((response) => {
+          //navigation.goBack();
+          navigation.navigate("managedOrders");
+          setIsvisibleLoading(false);
+        })
+        .catch((error) => {
+          //console.log();
+          if (isNetworkError(error)) {
+            console.log("Error Conexión: " + error);
+          }
+        });
+    }
+  }
+
+  function isNetworkError(err) {
+    return !!err.isAxiosError && !err.response;
   }
 }
 
@@ -324,7 +501,7 @@ const styles = StyleSheet.create({
   containerListItem: {
     borderBottomColor: "#d8d8d8",
     borderBottomWidth: 1,
-    height: 45,
+    height: 50,
   },
   imageContainer: {
     flex: 1,
@@ -373,7 +550,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     backgroundColor: "#f7c744",
     paddingVertical: 15,
-    marginTop: 70,
+    marginTop: 90,
     borderRadius: 15,
     marginLeft: 40,
     width: "80%",
@@ -386,5 +563,17 @@ const styles = StyleSheet.create({
   },
   customer: {
     alignItems: "center",
+  },
+  inputForm: {
+    height: 35,
+    marginBottom: 10,
+    color: "rgb(32,53,70)",
+    paddingHorizontal: 10,
+    // backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  imageContainer: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
   },
 });

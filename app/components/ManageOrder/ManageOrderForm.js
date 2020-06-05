@@ -18,6 +18,7 @@ import * as Location from "expo-location";
 import Loading from "../Loading";
 import Toast from "react-native-easy-toast";
 import { Input } from "@ui-kitten/components";
+import { useIsFocused, StackActions } from "@react-navigation/native";
 
 export default function ManageOrder(props) {
   const { navigation, route } = props;
@@ -49,7 +50,11 @@ export default function ManageOrder(props) {
   const { name } = route.params;
   const { rut } = route.params;
   const toastRef = useRef();
+  const isFocused = useIsFocused();
 
+  if (!isFocused) {
+    navigation.dispatch(StackActions.popToTop());
+  }
   function getListState() {
     const params = new URLSearchParams();
     params.append("opcion", "getActivaEstados");
@@ -101,8 +106,6 @@ export default function ManageOrder(props) {
         aspect: [4, 3],
         quality: 0.1,
       });
-      //setIsvisibleLoading(false);
-      //console.log(captureImage);
       if (!captureImage.cancelled) {
         //let x = "require(" + captureImage.url + ")";
         setImageUrlBol(true);
@@ -116,7 +119,7 @@ export default function ManageOrder(props) {
 
   const listInfo = [
     {
-      text: manifiesto,
+      text: manifiesto + " - " + fecha,
       iconName: "file-document-outline",
       iconType: "material-community",
       action: null,
@@ -228,7 +231,7 @@ export default function ManageOrder(props) {
       <View style={styles.picker}>
         <Picker
           selectedValue={selectedValueIncidence}
-          onValueChange={(itemValue, itemIndex) => c(itemValue)}
+          onValueChange={(itemValue, itemIndex) => select(itemValue)}
         >
           <Picker.Item label="Seleccione Solicitud..." value="cero" />
 
@@ -240,14 +243,11 @@ export default function ManageOrder(props) {
     );
   }
 
-  function c(itemValue) {
-    navigation.navigate("incidenList", {
-      screen: "incidents",
-      params: {
-        solicitud: itemValue,
-        order: pedido,
-        orderManifiesto: manifiesto,
-      },
+  function select(itemValue) {
+    navigation.navigate("incidents", {
+      solicitud: itemValue,
+      order: pedido,
+      orderManifiesto: manifiesto,
     });
     console.log(itemValue);
   }
@@ -289,21 +289,33 @@ export default function ManageOrder(props) {
   function Signature() {
     if (!signature) {
       return (
-        <View>
-          <Icon
-            type="material-community"
-            name="fountain-pen"
-            color="#7a7a7a"
-            containerStyle={styles.containerIcon}
-            onPress={() => navigation.navigate("digitalSignature")}
-          />
-        </View>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("digitalSignature", { option: "manageOrder" })
+          }
+        >
+          <View>
+            <Icon
+              type="material-community"
+              name="fountain-pen"
+              color="#7a7a7a"
+              containerStyle={styles.containerIcon}
+              onPress={() =>
+                navigation.navigate("digitalSignature", {
+                  option: "manageOrder",
+                })
+              }
+            />
+          </View>
+        </TouchableOpacity>
       );
     } else {
       return (
         <View>
           <TouchableOpacity
-            onPress={() => navigation.navigate("digitalSignature")}
+            onPress={() =>
+              navigation.navigate("digitalSignature", { option: "manageOrder" })
+            }
           >
             <Image
               source={{
@@ -351,6 +363,9 @@ export default function ManageOrder(props) {
 
   function getDatetime() {
     let date = new Date().getDate(); //Current Date
+    if (date < 10) {
+      date = "0" + date;
+    }
     let month = new Date().getMonth() + 1; //Current Month
     if (month < 10) {
       month = "0" + month;
@@ -384,7 +399,6 @@ export default function ManageOrder(props) {
       let match;
       let type;
 
-      console.log(signature);
       const params = new FormData();
       params.append("opcion", "guardaPedido");
       params.append("pedido", pedido);
@@ -398,9 +412,11 @@ export default function ManageOrder(props) {
       params.append("latitud", resultGeo.coords.latitude);
       params.append("longitud", resultGeo.coords.longitude);
       params.append("recibe_nombre", name ? name : "");
-      params.append("recibe_rut", rut ? name : "");
-      params.append("imgFirma", signature);
-      console.log(imageUrl);
+      params.append("recibe_rut", rut ? rut : "");
+      if (signature) {
+        params.append("imgFirma", signature);
+      }
+
       if (!imageUrlBol) {
         localUri = "";
         filename = "";
