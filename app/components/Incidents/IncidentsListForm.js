@@ -5,85 +5,65 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   AsyncStorage,
 } from "react-native";
 import Constants from "./../../utils/Constants";
-import { SearchBar, Icon } from "react-native-elements";
+import { Input, Icon } from "@ui-kitten/components";
 import { useIsFocused } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
-import { countries } from "countries-list";
-
-const useDebounce = (query) => {
-  const [debounceValue, setDebounceValue] = useState(query);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebounceValue(query);
-    }, 200);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [query, 200]);
-
-  return debounceValue;
-};
 
 export default function IncidentsListForm(props) {
-  const [query, setQuery] = useState("");
-  const debounceQuery = useDebounce(query);
-  const [filteredCountryList, setFilteredCountryList] = useState();
-
+  const isFocused = useIsFocused();
   const [userTitle, setUserTitle] = useState();
   const [carrierTitle, setCarrierTitle] = useState();
   const { url } = Constants;
   const { navigation, route } = props;
+  const [data, setData] = useState();
+  const [arrayholder, setArrayholder] = useState([]);
 
   useEffect(() => {
-    const getRememberedOrders = async () => {
-      try {
-        const credentialsUser = await AsyncStorage.getItem(
-          "@localStorage:dataOrder"
-        );
-        //setFilteredCountryList(JSON.parse(credentialsUser));
-        // console.log(credentialsUser);
-        if (credentialsUser !== null) {
-          const lowerCaseQuery = debounceQuery.toLowerCase();
+    if (isFocused) {
+      console.log("focus");
+      const getRememberedOrders = async () => {
+        try {
+          const credentialsUser = await AsyncStorage.getItem(
+            "@localStorage:dataOrder"
+          );
 
-          const newCountries = JSON.parse(credentialsUser)
-            .filter(
-              (country) =>
-                country.solicitud != "1" &&
-                country.pedido.includes(lowerCaseQuery)
-            )
-            .map((country) => ({
-              ...country,
-              rank: country.pedido.indexOf(lowerCaseQuery),
-            }))
-            .sort((a, b) => a.rank - b.rank);
+          if (credentialsUser !== null) {
+            const listData = JSON.parse(credentialsUser).filter(
+              (pedido) =>
+                //country.pedido.includes(lowerCaseQuery) &&
+                pedido.solicitud != "1"
+            );
 
-          setFilteredCountryList(newCountries);
+            setData(listData);
+            setArrayholder(listData);
+          }
+        } catch (error) {
+          console.log(error);
         }
-      } catch (error) {
-        console.log(error);
-      }
-    };
+      };
 
-    const getRememberedTitle = async () => {
-      try {
-        const carrierTitle = await AsyncStorage.getItem("@localStorage:title");
-        if (carrierTitle !== null) {
-          setUserTitle(JSON.parse(carrierTitle).user);
-          setCarrierTitle(JSON.parse(carrierTitle).carrier);
+      const getRememberedTitle = async () => {
+        try {
+          const carrierTitle = await AsyncStorage.getItem(
+            "@localStorage:title"
+          );
+          if (carrierTitle !== null) {
+            setUserTitle(JSON.parse(carrierTitle).user);
+            setCarrierTitle(JSON.parse(carrierTitle).carrier);
+          }
+        } catch (error) {
+          console.log(error);
         }
-      } catch (error) {
-        console.log(error);
-      }
-    };
+      };
 
-    getRememberedOrders();
-    getRememberedTitle();
-  }, [debounceQuery]);
+      getRememberedOrders();
+      getRememberedTitle();
+    }
+  }, [isFocused]);
 
   function ManifestButton() {
     return (
@@ -99,14 +79,31 @@ export default function IncidentsListForm(props) {
     );
   }
 
+  function searchData(text) {
+    const newData = arrayholder.filter((item) => {
+      return item.pedido.indexOf(text) > -1;
+    });
+
+    setData(newData);
+  }
+
+  const renderIcon = (props) => (
+    <TouchableWithoutFeedback>
+      <Icon {...props} name="search" />
+    </TouchableWithoutFeedback>
+  );
+
   return (
     <View style={{ flex: 1 }}>
-      <SearchBar
-        containerStyle={{ marginTop: 0 }}
-        placeholder="Buscar pedido"
-        onChangeText={setQuery}
-        value={query}
-      />
+      <View style={styles.containerInput}>
+        <Input
+          style={styles.inputForm}
+          onChangeText={(text) => searchData(text)}
+          keyboardType="numeric"
+          accessoryLeft={renderIcon}
+          placeholder="Busqueda"
+        />
+      </View>
 
       <View
         style={{
@@ -123,7 +120,7 @@ export default function IncidentsListForm(props) {
       </View>
       <FlatList
         keyExtractor={(item, index) => `${index}`}
-        data={filteredCountryList}
+        data={data}
         renderItem={({ item }) => (
           <Order
             item={item}
@@ -161,9 +158,10 @@ function Order(props) {
     tipo_solicitud,
     id_solicitudes_carrier_sac_estado,
     observacion_sac,
+    visto_proveedor,
   } = props.item;
   const { navigation, user, carrierUser } = props;
-
+  console.log(visto_proveedor);
   return (
     <TouchableOpacity
       onPress={() =>
@@ -178,6 +176,7 @@ function Order(props) {
           carrierUser: carrierUser,
           tipo_solicitud: tipo_solicitud,
           observacion_sac: observacion_sac,
+          visto_proveedor: visto_proveedor,
         })
       }
     >
@@ -191,7 +190,7 @@ function Order(props) {
             <Text style={styles.solicitud}>{tipo_solicitud}</Text>
             <Text style={styles.nombre_cliente}>{nombre_cliente} </Text>
           </View>
-          {id_solicitudes_carrier_sac_estado === "3" ? (
+          {/* {id_solicitudes_carrier_sac_estado === "3" ? (
             <Icon
               name="check-circle"
               color="#00a2dd"
@@ -207,7 +206,7 @@ function Order(props) {
 
               //backgroundColor="red"
             />
-          )}
+          )} */}
         </View>
       </View>
     </TouchableOpacity>
@@ -284,5 +283,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     fontWeight: "bold",
+  },
+  containerInput: {
+    backgroundColor: "#272626",
+  },
+  inputForm: {
+    height: 30,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
 });

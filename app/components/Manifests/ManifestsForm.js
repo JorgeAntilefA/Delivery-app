@@ -168,7 +168,7 @@ export default function ManifestsForm(props) {
     navigation.navigate("pendings", {
       screen: "pendientes",
       params: {
-        manifests: [...selected.keys()],
+        manifesto: [...selected.keys()],
         carrier: carrier,
         user: user,
         //fecha_gestion: fecha_gestion.getTime(),

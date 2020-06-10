@@ -5,33 +5,15 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Image,
   AsyncStorage,
 } from "react-native";
 import Constants from "./../../utils/Constants";
-import { SearchBar } from "react-native-elements";
+import { Input, Icon } from "@ui-kitten/components";
 import { useIsFocused } from "@react-navigation/native";
 
-const useDebounce = (query) => {
-  const [debounceValue, setDebounceValue] = useState(query);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebounceValue(query);
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [query, 100]);
-
-  return debounceValue;
-};
-
 export default function ManagedOrdersForm(props) {
-  const [query, setQuery] = useState("");
-  const debounceQuery = useDebounce(query);
-  const [filteredCountryList, setFilteredCountryList] = useState();
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
   const [data, setData] = useState();
   const { url } = Constants;
@@ -39,6 +21,7 @@ export default function ManagedOrdersForm(props) {
   const isFocused = useIsFocused();
   const [userTitle, setUserTitle] = useState();
   const [carrierTitle, setCarrierTitle] = useState();
+  const [arrayholder, setArrayholder] = useState([]);
 
   useEffect(() => {
     const getRememberedOrders = async () => {
@@ -47,54 +30,15 @@ export default function ManagedOrdersForm(props) {
           "@localStorage:dataOrder"
         );
 
-        //console.log(JSON.parse(credentialsUser));
-
-        // const prueba = JSON.parse(credentialsUser);
-        //console.log(prueba);
-        // const index = prueba.findIndex(
-        //   (x) => x.pedido === "179597679295987182094005"
-        // );
-
-        // console.log(index);
-        // if (index !== undefined) prueba.splice(index, 1);
-
-        // console.log(prueba);
-
-        // var a =
-        //   '{"carrier": "KWT_prueba",' +
-        //   '"comuna": "prueba",' +
-        //   '"direccion": "LAS DELICIAS 355 Piso 3 salud",' +
-        //   '"estado_entrega": "Sin Estado",' +
-        //   '"fecha": "2020-06-03",' +
-        //   '"id_solicitudes_carrier_sac_estado": null,' +
-        //   '"manifiesto": "63674",' +
-        //   '"nombre_cliente": "CATALINA BENAVENTE REYES",' +
-        //   '"nombre_manifiesto": "KWT RUTA NACIMIENTO",' +
-        //   '"observacion_sac": null,' +
-        //   '"pedido": "179597679295987182094005",' +
-        //   '"solicitud": "1",' +
-        //   '"tipo_solicitud": null }';
-        // var obj = JSON.parse(a);
-        // prueba.push(obj);
-
-        // console.log(prueba);
-
         if (credentialsUser !== null) {
-          const lowerCaseQuery = debounceQuery.toLowerCase();
+          const listData = JSON.parse(credentialsUser).filter(
+            (pedido) =>
+              //country.pedido.includes(lowerCaseQuery) &&
+              pedido.estado_entrega !== "Sin Estado"
+          );
 
-          const newCountries = JSON.parse(credentialsUser)
-            .filter(
-              (country) =>
-                country.pedido.includes(lowerCaseQuery) &&
-                country.estado_entrega !== "Sin Estado"
-            )
-            .map((country) => ({
-              ...country,
-              rank: country.pedido.indexOf(lowerCaseQuery),
-            }))
-            .sort((a, b) => a.rank - b.rank);
-
-          setFilteredCountryList(newCountries);
+          setData(listData);
+          setArrayholder(listData);
         }
       } catch (error) {
         console.log(error);
@@ -117,14 +61,30 @@ export default function ManagedOrdersForm(props) {
     getRememberedTitle();
   }, [isFocused]);
 
+  function searchData(text) {
+    const newData = arrayholder.filter((item) => {
+      return item.pedido.indexOf(text) > -1;
+    });
+
+    setData(newData);
+  }
+  const renderIcon = (props) => (
+    <TouchableWithoutFeedback>
+      <Icon {...props} name="search" />
+    </TouchableWithoutFeedback>
+  );
   return (
     <View>
-      <SearchBar
-        containerStyle={{ marginTop: 0 }}
-        placeholder="Buscar pedido"
-        onChangeText={setQuery}
-        value={query}
-      />
+      <View style={styles.containerInput}>
+        <Input
+          style={styles.inputForm}
+          onChangeText={(text) => searchData(text)}
+          keyboardType="numeric"
+          //value={(text) => setText(text)}
+          accessoryLeft={renderIcon}
+          placeholder="Busqueda"
+        />
+      </View>
       <View
         style={{
           height: 20,
@@ -140,7 +100,7 @@ export default function ManagedOrdersForm(props) {
       </View>
       <FlatList
         keyExtractor={(item, index) => `${index}`}
-        data={filteredCountryList}
+        data={data}
         renderItem={({ item }) => (
           <Order
             item={item}
@@ -283,11 +243,20 @@ const styles = StyleSheet.create({
     // width: 40,
     // height: 46
   },
+  // inputForm: {
+  //   height: 35,
+  //   marginBottom: 10,
+  //   color: "rgb(32,53,70)",
+  //   paddingHorizontal: 10,
+  //   // backgroundColor: "rgba(255,255,255,0.2)",
+  // },
+  containerInput: {
+    backgroundColor: "#272626",
+  },
   inputForm: {
-    height: 35,
-    marginBottom: 10,
-    color: "rgb(32,53,70)",
+    height: 30,
+    marginBottom: 20,
     paddingHorizontal: 10,
-    // backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
 });

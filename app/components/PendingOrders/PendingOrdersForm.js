@@ -23,14 +23,13 @@ export default function PendingOrdersForm(props) {
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
   const isFocused = useIsFocused();
   const { url } = Constants;
-  const { manifests, carrier, user } = route.params;
+  const { manifesto, carrier, user } = route.params;
 
-  let manifiestos = manifests;
+  let manifiestos = manifesto;
   const userP = user;
   const carrierUser = carrier;
   const [refresh, setRefresh] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-
   const [text, setText] = useState();
   const [arrayholder, setArrayholder] = useState([]);
 
@@ -38,6 +37,7 @@ export default function PendingOrdersForm(props) {
     if (isFocused) {
       const getPendingOrders = async () => {
         setIsvisibleLoading(true);
+        setText("");
         const params = new URLSearchParams();
         params.append("opcion", "getPedidosV3");
         params.append("manifiestos", manifiestos.toString());
@@ -45,11 +45,17 @@ export default function PendingOrdersForm(props) {
         await axios
           .post(url, params)
           .then((response) => {
-            console.log(response);
-            setData(JSON.parse(response.data.trim()));
-            setArrayholder(JSON.parse(response.data.trim()));
+            console.log(JSON.parse(response.data.trim()));
             rememberOrders(response.data.trim());
-            console.log(data);
+            const listData = JSON.parse(response.data.trim()).filter(
+              (pedido) =>
+                pedido.estado_entrega === "Sin Estado" &&
+                pedido.solicitud == "1"
+            );
+
+            setData(listData);
+            setArrayholder(listData);
+
             //setData()
             setIsvisibleLoading(false);
             setRefreshing(false);
@@ -73,7 +79,7 @@ export default function PendingOrdersForm(props) {
     try {
       await AsyncStorage.setItem("@localStorage:dataOrder", bd);
     } catch (error) {
-      // console.log(error);
+      console.log(error);
     }
   };
 
@@ -89,6 +95,7 @@ export default function PendingOrdersForm(props) {
     setRefreshing(true);
     // load();
     console.log("actualizado");
+    setRefreshing(true);
     //setRefreshing(false);
   }, [refreshing]);
 
@@ -97,14 +104,16 @@ export default function PendingOrdersForm(props) {
       <Icon {...props} name="search" />
     </TouchableWithoutFeedback>
   );
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.containerInput}>
         <Input
           style={styles.inputForm}
           onChangeText={(text) => searchData(text)}
+          onChange={(e) => setText(e.nativeEvent.text)}
           keyboardType="numeric"
-          //value={(text) => setText(text)}
+          value={text}
           accessoryLeft={renderIcon}
           placeholder="Busqueda"
         />
@@ -166,6 +175,8 @@ function Order(props) {
     nombre_cliente,
     carrier,
     fecha,
+    latitud,
+    longitud,
   } = props.item;
   const { navigation, user, carrierUser } = props;
 
@@ -176,11 +187,14 @@ function Order(props) {
           pedido: pedido,
           manifiesto: manifiesto,
           direccion: direccion,
+          comuna: comuna,
           nombre_cliente: nombre_cliente,
           carrier: carrier,
           fecha: fecha,
           user: user,
           carrierUser: carrierUser,
+          latitud: latitud,
+          longitud: longitud,
         })
       }
     >

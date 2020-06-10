@@ -3,6 +3,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import IncidentsScreen from "../screens/Incidents";
 import IncidentsListScreen from "../screens/IncidentsList";
 import ResponseIncidentsScreen from "../screens/ResponseIncidents";
+import Signature from "../components/Incidents/DigitalSignature";
 
 const Stack = createStackNavigator();
 
@@ -19,6 +20,7 @@ export default function IncidentsStack() {
         name="responseIncidents"
         component={ResponseIncidentsScreen}
       />
+      <Stack.Screen name="signatureI" component={Signature} />
     </Stack.Navigator>
   );
 }

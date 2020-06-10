@@ -4,15 +4,19 @@ import MapView from "react-native-maps";
 import openMaps from "react-native-open-maps";
 import MapViewDirections from "react-native-maps-directions";
 
-export default function Map() {
-  const origin = { latitude: 37.3318456, longitude: -122.0296002 };
-  const destination = { latitude: 37.771707, longitude: -122.4053769 };
+export default function Map(props) {
+  // console.log(props);
+  const { latitud, longitud, direccion, comuna } = props;
+  // const origin = { latitude: 37.3318456, longitude: -122.0296002 };
+  //const destination = { latitude: 37.771707, longitude: -122.4053769 };
+  console.log(latitud);
   const GOOGLE_MAPS_APIKEY = "AIzaSyA4ZZNjoY-DK2odO_2ZHpp-ju479SYq29s";
   const openAppMap = () => {
     openMaps({
-      latitude: -33.4240305,
-      longitude: -70.743708,
+      latitude: parseFloat(latitud),
+      longitude: parseFloat(longitud),
       zoom: 19,
+      end: direccion + ", " + comuna,
     });
   };
 
@@ -21,14 +25,17 @@ export default function Map() {
       style={styles.mapStyle}
       onPress={openAppMap}
       initialRegion={{
-        latitude: -33.4240305,
-        longitude: -70.743708,
+        latitude: parseFloat(latitud),
+        longitude: parseFloat(longitud),
         latitudeDelta: 0.08,
         longitudeDelta: 0.05,
       }}
     >
       <MapView.Marker
-        coordinate={{ latitude: -33.4240305, longitude: -70.743708 }}
+        coordinate={{
+          latitude: parseFloat(latitud),
+          longitude: parseFloat(longitud),
+        }}
         apikey={GOOGLE_MAPS_APIKEY}
       />
     </MapView>

@@ -24,12 +24,15 @@ export default function ManageOrder(props) {
   const { navigation, route } = props;
   const {
     direccion,
+    comuna,
     pedido,
     nombre_cliente,
     manifiesto,
     user,
     carrierUser,
     fecha,
+    latitud,
+    longitud,
   } = route.params;
 
   const [selectedValueState, setSelectedState] = useState("cero");
@@ -52,9 +55,9 @@ export default function ManageOrder(props) {
   const toastRef = useRef();
   const isFocused = useIsFocused();
 
-  if (!isFocused) {
-    navigation.dispatch(StackActions.popToTop());
-  }
+  // if (!isFocused) {
+  //   navigation.dispatch(StackActions.popToTop());
+  // }
   function getListState() {
     const params = new URLSearchParams();
     params.append("opcion", "getActivaEstados");
@@ -159,7 +162,18 @@ export default function ManageOrder(props) {
             {carrierUser}
           </Text>
         </View>
-        <Map />
+        {latitud ? (
+          <Map
+            latitud={latitud}
+            longitud={longitud}
+            direccion={direccion}
+            comuna={comuna}
+          />
+        ) : (
+          <View style={{ width: "100%", height: "13%" }}>
+            <Text> No se pudo cargar mapa</Text>
+          </View>
+        )}
         {listInfo.map((item, index) => (
           <ListItem
             key={index}
@@ -225,6 +239,8 @@ export default function ManageOrder(props) {
       </View>
     );
   }
+
+  function Mapa() {}
 
   function PickerIncidences() {
     return (
@@ -386,7 +402,7 @@ export default function ManageOrder(props) {
 
   async function SaveOrder() {
     if (selectedValueState == "cero") {
-      toastRef.current.show("Debes selecciona estado");
+      toastRef.current.show("Debes seleccionar estado");
     } else {
       setIsvisibleLoading(true);
       const resultGeo = await getLocation();
@@ -506,6 +522,7 @@ const styles = StyleSheet.create({
     // backgroundColor: "#68a0cf",
     height: 45,
     justifyContent: "center",
+    fontSize: 60,
     textAlign: "center",
     //width: 200,
     borderWidth: 1,
