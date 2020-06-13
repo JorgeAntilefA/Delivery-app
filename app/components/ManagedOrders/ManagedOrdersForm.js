@@ -74,7 +74,7 @@ export default function ManagedOrdersForm(props) {
     </TouchableWithoutFeedback>
   );
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <View style={styles.containerInput}>
         <Input
           style={styles.inputForm}
@@ -137,6 +137,8 @@ function Order(props) {
     estado_entrega,
     recibe_nombre,
     recibe_rut,
+    ruta_foto,
+    ruta_firma,
   } = props.item;
   const { navigation, user, carrierUser } = props;
 
@@ -155,6 +157,8 @@ function Order(props) {
           estado_entrega: estado_entrega,
           recibe_nombre: recibe_nombre,
           recibe_rut: recibe_rut,
+          ruta_foto: ruta_foto,
+          ruta_firma: ruta_firma,
         })
       }
     >
@@ -174,6 +178,11 @@ function Order(props) {
             <Text style={styles.comuna}>{comuna} </Text>
             <Text style={styles.direccion}>{direccion}</Text>
             <Text style={styles.nombre_cliente}>{nombre_cliente}</Text>
+            {estado_entrega == "Entregado" ? (
+              <Text style={styles.entregado}>{estado_entrega}</Text>
+            ) : (
+              <Text style={styles.otroEstado}>{estado_entrega}</Text>
+            )}
           </View>
         </View>
       </View>
@@ -243,13 +252,6 @@ const styles = StyleSheet.create({
     // width: 40,
     // height: 46
   },
-  // inputForm: {
-  //   height: 35,
-  //   marginBottom: 10,
-  //   color: "rgb(32,53,70)",
-  //   paddingHorizontal: 10,
-  //   // backgroundColor: "rgba(255,255,255,0.2)",
-  // },
   containerInput: {
     backgroundColor: "#272626",
   },
@@ -258,5 +260,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 10,
     backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  entregado: {
+    fontWeight: "bold",
+    fontSize: 18,
+    //width: "77%",
+    width: "73%",
+    textAlign: "center",
+    backgroundColor: "#04B404",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#fff",
+  },
+  otroEstado: {
+    fontWeight: "bold",
+    fontSize: 18,
+    //width: "77%",
+    width: "90%",
+    textAlign: "center",
+    backgroundColor: "#FE2E2E",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#fff",
   },
 });

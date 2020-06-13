@@ -9,7 +9,9 @@ import {
   AsyncStorage,
 } from "react-native";
 import Constants from "./../../utils/Constants";
-import { Input, Icon } from "@ui-kitten/components";
+// import { Input, Icon } from "@ui-kitten/components";
+import Icon from "react-native-vector-icons/FontAwesome";
+import { Input } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
 
@@ -87,21 +89,29 @@ export default function IncidentsListForm(props) {
     setData(newData);
   }
 
-  const renderIcon = (props) => (
-    <TouchableWithoutFeedback>
-      <Icon {...props} name="search" />
-    </TouchableWithoutFeedback>
-  );
-
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.containerInput}>
-        <Input
-          style={styles.inputForm}
+        {/* <Input
+          style={styles.SectionStyle}
           onChangeText={(text) => searchData(text)}
           keyboardType="numeric"
           accessoryLeft={renderIcon}
           placeholder="Busqueda"
+        /> */}
+        <Input
+          inputContainerStyle={styles.SectionStyle}
+          placeholder="Busqueda"
+          onChangeText={(text) => searchData(text)}
+          keyboardType="numeric"
+          leftIcon={
+            <Icon
+              name="search"
+              size={24}
+              color="black"
+              style={{ marginLeft: 5 }}
+            />
+          }
         />
       </View>
 
@@ -134,83 +144,83 @@ export default function IncidentsListForm(props) {
       <ManifestButton />
     </View>
   );
-}
-function SeparatorManifest() {
-  return (
-    <View
-      style={{
-        height: 1,
-        // width: "100%",
-        backgroundColor: "#CED0CE",
-      }}
-    />
-  );
-}
-function Order(props) {
-  const {
-    pedido,
-    direccion,
-    comuna,
-    manifiesto,
-    nombre_cliente,
-    carrier,
-    fecha,
-    tipo_solicitud,
-    id_solicitudes_carrier_sac_estado,
-    observacion_sac,
-    visto_proveedor,
-  } = props.item;
-  const { navigation, user, carrierUser } = props;
-  console.log(visto_proveedor);
-  return (
-    <TouchableOpacity
-      onPress={() =>
-        navigation.navigate("responseIncidents", {
-          pedido: pedido,
-          manifiesto: manifiesto,
-          direccion: direccion,
-          nombre_cliente: nombre_cliente,
-          carrier: carrier,
-          fecha: fecha,
-          user: user,
-          carrierUser: carrierUser,
-          tipo_solicitud: tipo_solicitud,
-          observacion_sac: observacion_sac,
-          visto_proveedor: visto_proveedor,
-        })
-      }
-    >
-      <View style={styles.item}>
-        <View style={styles.inline}>
-          <Text style={styles.pedido}>{pedido} </Text>
-          <Text style={styles.manifiesto}>{manifiesto} </Text>
-        </View>
-        <View style={styles.inline}>
-          <View style={styles.containerInfo}>
-            <Text style={styles.solicitud}>{tipo_solicitud}</Text>
-            <Text style={styles.nombre_cliente}>{nombre_cliente} </Text>
+
+  function SeparatorManifest() {
+    return (
+      <View
+        style={{
+          height: 1,
+          // width: "100%",
+          backgroundColor: "#CED0CE",
+        }}
+      />
+    );
+  }
+
+  function Order(props) {
+    const {
+      pedido,
+      direccion,
+      comuna,
+      manifiesto,
+      nombre_cliente,
+      carrier,
+      fecha,
+      tipo_solicitud,
+      id_solicitudes_carrier_sac_estado,
+      observacion_sac,
+      visto_proveedor,
+    } = props.item;
+    const { navigation, user, carrierUser } = props;
+    console.log(visto_proveedor);
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("responseIncidents", {
+            pedido: pedido,
+            manifiesto: manifiesto,
+            direccion: direccion,
+            nombre_cliente: nombre_cliente,
+            carrier: carrier,
+            fecha: fecha,
+            user: user,
+            carrierUser: carrierUser,
+            tipo_solicitud: tipo_solicitud,
+            observacion_sac: observacion_sac,
+            visto_proveedor: visto_proveedor,
+          })
+        }
+      >
+        <View style={styles.item}>
+          <View style={styles.inline}>
+            <Text style={styles.pedido}>{pedido} </Text>
+            <Text style={styles.manifiesto}>{manifiesto} </Text>
           </View>
-          {/* {id_solicitudes_carrier_sac_estado === "3" ? (
-            <Icon
-              name="check-circle"
-              color="#00a2dd"
-              size={50}
-
-              //backgroundColor="red"
-            />
-          ) : (
-            <Icon
-              name="update"
-              color="#CE0000"
-              size={50}
-
-              //backgroundColor="red"
-            />
-          )} */}
+          <View style={styles.inline}>
+            <View style={styles.containerInfo}>
+              <Text style={styles.solicitud}>{tipo_solicitud}</Text>
+              <Text style={styles.nombre_cliente}>{nombre_cliente} </Text>
+            </View>
+            {id_solicitudes_carrier_sac_estado == 3 ? (
+              <Icon
+                name="check-circle"
+                // type="material-community"
+                color="#377C1E"
+                size={60}
+              />
+            ) : (
+              <Icon
+                name="history"
+                // type="material-community"
+                color="#BF1313"
+                size={60}
+              />
+            )}
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -286,11 +296,22 @@ const styles = StyleSheet.create({
   },
   containerInput: {
     backgroundColor: "#272626",
+    height: 40,
   },
   inputForm: {
     height: 30,
     marginBottom: 20,
     paddingHorizontal: 10,
     backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  SectionStyle: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 0.5,
+    borderColor: "#000",
+    height: 35,
+    borderRadius: 5,
   },
 });

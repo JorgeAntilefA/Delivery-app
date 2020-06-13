@@ -298,7 +298,13 @@ export default function ResponseIncidentsForm(props) {
     }
     let year = new Date().getFullYear(); //Current Year
     let hours = new Date().getHours(); //Current Hours
+    if (hours < 10) {
+      hours = "0" + sec;
+    }
     let min = new Date().getMinutes(); //Current Minutes
+    if (min < 10) {
+      min = "0" + sec;
+    }
     let sec = new Date().getSeconds(); //Current Seconds
     if (sec < 10) {
       sec = "0" + sec;
@@ -402,98 +408,70 @@ export default function ResponseIncidentsForm(props) {
   }
 
   async function SaveOrder() {
-    // if (selectedValueState == "cero") {
-    //   toastRef.current.show("Debes seleccionar estado");
-    // } else {
-    //   setIsvisibleLoading(true);
-    //   const resultGeo = await getLocation();
-    //   let fecha_gestion = getDatetime();
-    //   let date = new Date();
-    //   let hour = date.getHours() + ":00";
+    if (selectedValueState == "cero") {
+      toastRef.current.show("Debes seleccionar estado");
+    } else {
+      setIsvisibleLoading(true);
+      const resultGeo = await getLocation();
+      let fecha_gestion = getDatetime();
+      let date = new Date();
+      let hour = date.getHours() + ":00";
 
-    //   let localUri;
-    //   let filename;
-    //   let match;
-    //   let type;
+      let localUri;
+      let filename;
+      let match;
+      let type;
+      console.log();
+      const params = new FormData();
+      params.append("opcion", "guardaPedido");
+      params.append("pedido", pedido);
+      params.append("manifiesto", man ? man : manifiesto);
+      params.append("fecha_manifiesto", fecha);
+      params.append("hora_gestion", hour);
+      params.append("fecha_gestion", fecha_gestion);
+      params.append("estado_entrega", selectedValueState);
+      params.append("encargado", user);
+      params.append("carrier", carrierUser);
+      params.append("latitud", resultGeo.coords.latitude);
+      params.append("longitud", resultGeo.coords.longitude);
+      params.append("recibe_nombre", name ? name : "");
+      params.append("recibe_rut", rut ? rut : "");
+      if (signature) {
+        params.append("imgFirma", signature);
+      }
 
-    //   const params = new FormData();
-    //   params.append("opcion", "guardaPedido");
-    //   params.append("pedido", pedido);
-    //   params.append("manifiesto", man == "" ? manifiesto : man);
-    //   params.append("fecha_manifiesto", fecha);
-    //   params.append("hora_gestion", hour);
-    //   params.append("fecha_gestion", fecha_gestion);
-    //   params.append("estado_entrega", selectedValueState);
-    //   params.append("encargado", user);
-    //   params.append("carrier", carrierUser);
-    //   params.append("latitud", resultGeo.coords.latitude);
-    //   params.append("longitud", resultGeo.coords.longitude);
-    //   params.append("recibe_nombre", name ? name : "");
-    //   params.append("recibe_rut", rut ? rut : "");
-    //   if (signature) {
-    //     params.append("imgFirma", signature);
-    //   }
+      if (!imageUrlBol) {
+        localUri = "";
+        filename = "";
+        match = "";
+        type = "";
+      } else {
+        localUri = imageUrl;
+        filename = localUri.split("/").pop();
+        match = /\.(\w+)$/.exec(filename);
+        type = match ? `image/${match[1]}` : `image`;
 
-    //   if (!imageUrlBol) {
-    //     localUri = "";
-    //     filename = "";
-    //     match = "";
-    //     type = "";
-    //   } else {
-    //     localUri = imageUrl;
-    //     filename = localUri.split("/").pop();
-    //     match = /\.(\w+)$/.exec(filename);
-    //     type = match ? `image/${match[1]}` : `image`;
+        params.append("imgPedido", { uri: localUri, name: filename, type });
+      }
 
-    //     params.append("imgPedido", { uri: localUri, name: filename, type });
-    //   }
-
-    //   axios
-    //     .post(url, params, {
-    //       headers: {
-    //         "content-type": "multipart/form-data",
-    //       },
-    //     })
-    //     .then((response) => {
-    // navigation.navigate("pendings", {
-    //   screen: "pendientes",
-    //   params: {
-    //     manifests: manifiesto,
-    //   },
-    // });
-    // setIsvisibleLoading(false);
-    navigation.goBack();
-    navigation.navigate("pendings");
-    // const resetAction = StackActions.reset({
-    //   index: 0,
-    //   actions: [NavigationActions.navigate({ routeName: "pendings" })],
-    // });
-    // navigation.dispatch(resetAction);
-
-    // navigation.dispatch(
-    //   CommonActions.reset({
-    //     index: 0,
-    //     routes: [
-    //       { name: "manifests", params: { carrier: "KWT" } },
-    //       {
-    //         name: "pendings",
-    //         screen: "pendientes",
-    //         params: {
-    //           manifesto: "64076",
-    //         },
-    //       },
-    //     ],
-    //   })
-    // );
-
-    // })
-    // .catch((error) => {
-    //   console.log(error);
-    //   if (isNetworkError(error)) {
-    //     console.log("Error Conexión: " + error);
-    //   }
-    // });
-    // }
+      axios
+        .post(url, params, {
+          headers: {
+            "content-type": "multipart/form-data",
+          },
+        })
+        .then((response) => {
+          setIsvisibleLoading(false);
+          navigation.goBack();
+          navigation.navigate("pendings");
+        })
+        .catch((error) => {
+          console.log(error);
+          if (isNetworkError(error)) {
+            console.log("Error Conexión: " + error);
+          }
+        });
+    }
   }
 }
 

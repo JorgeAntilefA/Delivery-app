@@ -9,7 +9,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { Icon, ListItem } from "react-native-elements";
+import { Icon, ListItem, CheckBox } from "react-native-elements";
 import axios from "axios";
 import Constants from "./../../utils/Constants";
 import * as Location from "expo-location";
@@ -34,6 +34,8 @@ export default function ModifyManagedOrder(props) {
     estado_entrega,
     recibe_nombre,
     recibe_rut,
+    ruta_foto,
+    ruta_firma,
   } = route.params;
 
   const [selectedValueState, setSelectedState] = useState(estado_entrega);
@@ -50,11 +52,24 @@ export default function ModifyManagedOrder(props) {
 
   const [nameCli, setNameCli] = useState();
   const [rutCli, setRutCli] = useState();
+  const [observacion, setObservacion] = useState("");
 
   const { signature } = route.params;
   const { name } = route.params;
   const { rut } = route.params;
   const isFocused = useIsFocused();
+  console.log(ruta_foto);
+  console.log(ruta_firma);
+
+  const [checkedFoto, setCheckedFoto] = useState(
+    ruta_foto == "1" ? true : false
+  );
+  const [checkedFirma, setCheckedFirma] = useState(
+    ruta_firma == "1" ? true : false
+  );
+  const [checkedRut, setCheckedRut] = useState(
+    recibe_rut !== "" ? true : false
+  );
 
   function getListState() {
     const params = new URLSearchParams();
@@ -64,23 +79,15 @@ export default function ModifyManagedOrder(props) {
     return axios.post(url, params);
   }
 
-  // if (!isFocused) {
-  //   navigation.goBack();
-  //   console.log("out");
-
-  //   // signature = null;
-  //   // name = null;
-  // }
-
   useEffect(() => {
     const getManifests = async () => {
       await axios
         .all([getListState()])
         .then(
           axios.spread((...responses) => {
-            //console.log(responses[0]);
             const responseListState = responses[0];
             setSelectedValueS(JSON.parse(responseListState.data.trim()));
+            //console.log(JSON.parse(responseListState.data.trim()));
           })
         )
         .catch((errors) => {
@@ -206,37 +213,40 @@ export default function ModifyManagedOrder(props) {
           </Text>
         </View>
       );
+    } else if (recibe_rut !== "") {
+      return (
+        <View style={styles.customer}>
+          <Text>
+            {"Recibido: "}
+            {recibe_nombre}
+            {" - "}
+            {recibe_rut}
+          </Text>
+        </View>
+      );
     } else {
       return (
         <View>
-          <Text></Text>
+          <Text> </Text>
         </View>
       );
     }
   }
 
   function EditOrder() {
-    if (selectedValueState == "Entregado") {
-      return (
-        <View>
-          <Input
-            style={styles.inputForm}
-            placeholder={!rutCli ? "11111111-1" : rutCli}
-            placeholderColor="#c4c3cb"
-            value={rutCli}
-            onChange={(e) => setRutCli(e.nativeEvent.text)}
-          />
-          <Input
-            style={styles.inputForm}
-            placeholder={!nameCli ? "Cliente" : nameCli}
-            placeholderColor="#c4c3cb"
-            value={nameCli}
-            onChange={(e) => setName(e.nativeEvent.text)}
-          />
+    return (
+      <View>
+        <View
+          style={{
+            flexDirection: "row",
+            flex: 1,
+            justifyContent: "center",
+          }}
+        >
+          <CheckBox center title="Foto" checked={checkedFoto} />
+          <CheckBox center title="Firma" checked={checkedFirma} />
+          <CheckBox center title="Cliente" checked={checkedRut} />
         </View>
-      );
-    } else {
-      return (
         <View>
           <Customer />
           <View style={styles.imageContainer}>
@@ -244,8 +254,39 @@ export default function ModifyManagedOrder(props) {
             <Signature />
           </View>
         </View>
-      );
-    }
+      </View>
+    );
+
+    // if (selectedValueState == "Entregado") {
+    //   return (
+    //     <View>
+    //       <Input
+    //         style={styles.inputForm}
+    //         placeholder={!rutCli ? "11111111-1" : rutCli}
+    //         placeholderColor="#c4c3cb"
+    //         value={rutCli}
+    //         onChange={(e) => setRutCli(e.nativeEvent.text)}
+    //       />
+    //       <Input
+    //         style={styles.inputForm}
+    //         placeholder={!nameCli ? "Cliente" : nameCli}
+    //         placeholderColor="#c4c3cb"
+    //         value={nameCli}
+    //         onChange={(e) => setName(e.nativeEvent.text)}
+    //       />
+    //     </View>
+    //   );
+    // } else {
+    //   return (
+    //     <View>
+    //       <Customer />
+    //       <View style={styles.imageContainer}>
+    //         <Camera />
+    //         <Signature />
+    //       </View>
+    //     </View>
+    //   );
+    // }
   }
 
   const listInfo = [
@@ -305,6 +346,15 @@ export default function ModifyManagedOrder(props) {
         ))}
         <Text style={styles.pedido}>Modificar Estado del Pedido</Text>
         <PickerState />
+        <Input
+          style={styles.inputTextArea}
+          placeholder="Observacion"
+          multiline={true}
+          numberOfLines={4}
+          placeholderColor="#c4c3cb"
+          value={observacion}
+          onChange={(e) => setObservacion(e.nativeEvent.text)}
+        />
         <EditOrder />
         <TouchableOpacity
           style={styles.buttonContainer}
@@ -399,7 +449,13 @@ export default function ModifyManagedOrder(props) {
     }
     let year = new Date().getFullYear(); //Current Year
     let hours = new Date().getHours(); //Current Hours
+    if (hours < 10) {
+      hours = "0" + sec;
+    }
     let min = new Date().getMinutes(); //Current Minutes
+    if (min < 10) {
+      min = "0" + sec;
+    }
     let sec = new Date().getSeconds(); //Current Seconds
     if (sec < 10) {
       sec = "0" + sec;
@@ -468,7 +524,11 @@ export default function ModifyManagedOrder(props) {
         })
         .then((response) => {
           //navigation.goBack();
-          navigation.navigate("managedOrders");
+          // navigation.navigate("managedOrders");
+          navigation.goBack();
+          navigation.navigate("pendings", {
+            screen: "pendientes",
+          });
           setIsvisibleLoading(false);
         })
         .catch((error) => {
@@ -550,7 +610,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     backgroundColor: "#f7c744",
     paddingVertical: 15,
-    marginTop: 90,
+    marginTop: 20,
     borderRadius: 15,
     marginLeft: 40,
     width: "80%",
@@ -575,5 +635,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     justifyContent: "center",
+  },
+  inputTextArea: {
+    height: 50,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
 });

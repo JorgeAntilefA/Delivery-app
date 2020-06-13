@@ -27,6 +27,70 @@ export default function ManifestsForm(props) {
   const toastRef = useRef();
   const [refreshing, setRefreshing] = useState(false);
 
+  function getListState() {
+    const params = new URLSearchParams();
+    params.append("opcion", "getActivaEstados");
+    params.append("carrier", carrier);
+
+    return axios.post(url, params);
+  }
+
+  function getListIncidence() {
+    const params = new URLSearchParams();
+    params.append("opcion", "getTiposSolicitudes");
+    params.append("carrier", carrier);
+
+    return axios.post(url, params);
+  }
+
+  function getListManifest() {
+    const params = new URLSearchParams();
+    params.append("opcion", "getManifiestos");
+    params.append("carrier", carrier);
+
+    return axios.post(url, params);
+  }
+
+  const load = async () => {
+    await axios
+      .all([getListState(), getListIncidence(), getListManifest()])
+      .then(
+        axios.spread((...responses) => {
+          const responseListState = responses[0];
+          const responseListIncidence = responses[1];
+          const responseListManifest = responses[2];
+          //setSelectedValueS(JSON.parse(responseListState.data.trim()));
+          rememberStates(responseListState.data.trim());
+          rememberIncidents(responseListIncidence.data.trim());
+
+          Platform.OS === "ios"
+            ? setData(responseListManifest.data)
+            : setData(JSON.parse(responseListManifest.data.trim()));
+          setIsvisibleLoading(false);
+          setRefreshing(false);
+        })
+      )
+      .catch((errors) => {
+        console.log(errors);
+      });
+  };
+
+  const rememberStates = async (bd) => {
+    try {
+      await AsyncStorage.setItem("@localStorage:states", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const rememberIncidents = async (bd) => {
+    try {
+      await AsyncStorage.setItem("@localStorage:incidents", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     const getManifests = async () => {
       setIsvisibleLoading(true);
@@ -36,27 +100,6 @@ export default function ManifestsForm(props) {
     setRefreshing(false);
     rememberTitle();
   }, [carrier]);
-
-  const load = async () => {
-    const params = new URLSearchParams();
-    params.append("opcion", "getManifiestos");
-    params.append("carrier", carrier);
-
-    await axios
-      .post(url, params)
-      .then((response) => {
-        //console.log(response);
-
-        Platform.OS === "ios"
-          ? setData(response.data)
-          : setData(JSON.parse(response.data.trim()));
-        setIsvisibleLoading(false);
-        setRefreshing(false);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
 
   const rememberTitle = async () => {
     try {

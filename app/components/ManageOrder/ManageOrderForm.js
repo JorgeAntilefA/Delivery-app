@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Picker,
+  AsyncStorage,
   Image,
   TouchableOpacity,
   ScrollView,
+  Linking,
+  Button,
 } from "react-native";
 import { Icon, ListItem } from "react-native-elements";
 import * as Permissions from "expo-permissions";
@@ -77,18 +80,22 @@ export default function ManageOrder(props) {
   useEffect(() => {
     const getManifests = async () => {
       await axios
-        .all([getListState(), getListIncidence()])
+        .all([getListIncidence()])
         .then(
           axios.spread((...responses) => {
-            const responseListState = responses[0];
-            const responseListIncidence = responses[1];
-            setSelectedValueS(JSON.parse(responseListState.data.trim()));
+            // const responseListState = responses[0];
+            const responseListIncidence = responses[0];
+            // setSelectedValueS(JSON.parse(responseListState.data.trim()));
             setSelectedValueI(JSON.parse(responseListIncidence.data.trim()));
           })
         )
         .catch((errors) => {
           console.log(errors);
         });
+
+      const statesAPP = await AsyncStorage.getItem("@localStorage:states");
+
+      setSelectedValueS(JSON.parse(statesAPP));
     };
     getManifests();
   }, []);
@@ -146,6 +153,29 @@ export default function ManageOrder(props) {
       action: null,
     },
   ];
+
+  const OpenURLButton = ({ url, children }) => {
+    const handlePress = useCallback(async () => {
+      const supported = await Linking.canOpenURL(url);
+      console.log(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert(`No se puede procesar tu direccion en este momento`);
+      }
+    }, [url]);
+
+    return (
+      // <Button title={children} onPress={handlePress} style={{ height: 45 }} />
+      <TouchableOpacity
+        title={children}
+        onPress={handlePress}
+        style={styles.btnMapa}
+      >
+        <Text style={styles.buttonTextMapa}>VER EN MAPA</Text>
+      </TouchableOpacity>
+    );
+  };
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -170,8 +200,22 @@ export default function ManageOrder(props) {
             comuna={comuna}
           />
         ) : (
-          <View style={{ width: "100%", height: "13%" }}>
-            <Text> No se pudo cargar mapa</Text>
+          <View style={{ width: "100%" }}>
+            <OpenURLButton
+              url={encodeURI(
+                "https://www.google.cl/maps/place/" +
+                  direccion +
+                  "," +
+                  comuna +
+                  ", Chile"
+              )}
+            >
+              VER EN MAPA
+            </OpenURLButton>
+            {/* <Text href="https://www.google.cl/maps/place/Castelnovi+1779,+Cerro+Navia,+Regi%C3%B3n+Metropolitana">
+              {" "}
+              No se pudo cargar mapa
+            </Text> */}
           </View>
         )}
         {listInfo.map((item, index) => (
@@ -239,8 +283,6 @@ export default function ManageOrder(props) {
       </View>
     );
   }
-
-  function Mapa() {}
 
   function PickerIncidences() {
     return (
@@ -388,7 +430,13 @@ export default function ManageOrder(props) {
     }
     let year = new Date().getFullYear(); //Current Year
     let hours = new Date().getHours(); //Current Hours
+    if (hours < 10) {
+      hours = "0" + sec;
+    }
     let min = new Date().getMinutes(); //Current Minutes
+    if (min < 10) {
+      min = "0" + sec;
+    }
     let sec = new Date().getSeconds(); //Current Seconds
     if (sec < 10) {
       sec = "0" + sec;
@@ -553,5 +601,16 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 10,
     backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  btnMapa: {
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#4C83F2",
+  },
+  buttonTextMapa: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 15,
   },
 });

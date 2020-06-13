@@ -45,7 +45,7 @@ export default function PendingOrdersForm(props) {
         await axios
           .post(url, params)
           .then((response) => {
-            console.log(JSON.parse(response.data.trim()));
+            //  console.log(JSON.parse(response.data.trim()));
             rememberOrders(response.data.trim());
             const listData = JSON.parse(response.data.trim()).filter(
               (pedido) =>
