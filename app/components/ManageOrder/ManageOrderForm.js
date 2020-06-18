@@ -21,7 +21,7 @@ import * as Location from "expo-location";
 import Loading from "../Loading";
 import Toast from "react-native-easy-toast";
 import { Input } from "@ui-kitten/components";
-import { useIsFocused, StackActions } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function ManageOrder(props) {
   const { navigation, route } = props;
@@ -57,17 +57,6 @@ export default function ManageOrder(props) {
   const { rut } = route.params;
   const toastRef = useRef();
   const isFocused = useIsFocused();
-
-  // if (!isFocused) {
-  //   navigation.dispatch(StackActions.popToTop());
-  // }
-  function getListState() {
-    const params = new URLSearchParams();
-    params.append("opcion", "getActivaEstados");
-    params.append("carrier", carrierUser);
-
-    return axios.post(url, params);
-  }
 
   function getListIncidence() {
     const params = new URLSearchParams();
@@ -212,10 +201,6 @@ export default function ManageOrder(props) {
             >
               VER EN MAPA
             </OpenURLButton>
-            {/* <Text href="https://www.google.cl/maps/place/Castelnovi+1779,+Cerro+Navia,+Regi%C3%B3n+Metropolitana">
-              {" "}
-              No se pudo cargar mapa
-            </Text> */}
           </View>
         )}
         {listInfo.map((item, index) => (

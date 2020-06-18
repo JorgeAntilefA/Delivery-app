@@ -12,13 +12,6 @@ import axios from "axios";
 import Constants from "./../../utils/Constants";
 import Loading from "../Loading";
 import Toast from "react-native-easy-toast";
-import {
-  useIsFocused,
-  CommonActions,
-  NavigationActions,
-  StackActions,
-} from "@react-navigation/native";
-import { Input } from "@ui-kitten/components";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Permissions from "expo-permissions";
 import * as ImagePicker from "expo-image-picker";
@@ -44,7 +37,6 @@ export default function ResponseIncidentsForm(props) {
 
   const [selectedValueState, setSelectedState] = useState("cero");
   const [selectedValueS, setSelectedValueS] = useState([]);
-  const [man, setMan] = useState();
   const { url } = Constants;
 
   const [visto, setVisto] = useState(visto_proveedor);
@@ -203,14 +195,7 @@ export default function ResponseIncidentsForm(props) {
     return (
       <View>
         <PickerState />
-        <Text style={styles.text}>Manifiesto</Text>
         <View style={styles.containerFaltantes}>
-          <Input
-            style={styles.inputFormMan}
-            keyboardType="numeric"
-            placeholderColor="#c4c3cb"
-            onChange={(e) => setMan(e.nativeEvent.text)}
-          />
           {visto == "1" ? (
             <Button
               containerStyle={styles.buttonContainerView}
@@ -425,7 +410,7 @@ export default function ResponseIncidentsForm(props) {
       const params = new FormData();
       params.append("opcion", "guardaPedido");
       params.append("pedido", pedido);
-      params.append("manifiesto", man ? man : manifiesto);
+      params.append("manifiesto", manifiesto);
       params.append("fecha_manifiesto", fecha);
       params.append("hora_gestion", hour);
       params.append("fecha_gestion", fecha_gestion);
@@ -541,7 +526,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7c744",
 
     paddingVertical: 15,
-    marginTop: 20,
+    marginBottom: 10,
+    marginTop: 5,
     borderRadius: 15,
     marginLeft: 40,
     width: "80%",
@@ -577,8 +563,8 @@ const styles = StyleSheet.create({
   },
   buttonContainerView: {
     paddingVertical: 15,
-    marginTop: -15,
-    marginLeft: 20,
+    marginTop: -5,
+    marginLeft: 100,
     borderRadius: 15,
     width: "40%",
   },

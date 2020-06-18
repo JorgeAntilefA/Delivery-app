@@ -37,7 +37,7 @@ export default function IncidentsListForm(props) {
             const listData = JSON.parse(credentialsUser).filter(
               (pedido) =>
                 //country.pedido.includes(lowerCaseQuery) &&
-                pedido.solicitud != "1"
+                pedido.solicitud != "1" && pedido.gestion_usuario != "1"
             );
 
             setData(listData);
