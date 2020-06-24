@@ -183,7 +183,7 @@ export default function LoginForm(props) {
         <View style={styles.container}>
           <View style={styles.logoContainer}>
             <Image
-              source={require("../../../assets/dft_logo.gif")}
+              source={require("../../../assets/transparentedft.png")}
               style={styles.logo}
               resizeMode="contain"
             />
