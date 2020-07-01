@@ -36,6 +36,7 @@ export default function ManageOrder(props) {
     fecha,
     latitud,
     longitud,
+    tipo_despacho,
   } = route.params;
 
   const [selectedValueState, setSelectedState] = useState("cero");
@@ -48,6 +49,7 @@ export default function ManageOrder(props) {
   const [imageUrl, setImageUrl] = useState();
   const { url } = Constants;
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
+  const [isVisibleLoadingCam, setIsvisibleLoadingCam] = useState(false);
   const [observacion, setObservacion] = useState("");
 
   const [errorMsg, setErrorMsg] = useState(null);
@@ -90,12 +92,11 @@ export default function ManageOrder(props) {
   }, []);
 
   const getImageFromCamera = async () => {
-    setIsvisibleLoading(true);
+    setIsvisibleLoadingCam(true);
     const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
     const cameraRollPermission = await Permissions.askAsync(
       Permissions.CAMERA_ROLL
     );
-    // console.log(cameraPermission);
     if (
       cameraPermission.status === "granted" &&
       cameraRollPermission.status === "granted"
@@ -109,9 +110,9 @@ export default function ManageOrder(props) {
         //let x = "require(" + captureImage.url + ")";
         setImageUrlBol(true);
         setImageUrl(captureImage.uri);
-        setIsvisibleLoading(false);
+        setIsvisibleLoadingCam(false);
       } else {
-        setIsvisibleLoading(false);
+        setIsvisibleLoadingCam(false);
       }
     }
   };
@@ -248,8 +249,8 @@ export default function ManageOrder(props) {
           position="center"
           opacity={0.5}
         />
-        {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
       </View>
+      {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
     </ScrollView>
   );
 
@@ -291,12 +292,16 @@ export default function ManageOrder(props) {
       solicitud: itemValue,
       order: pedido,
       orderManifiesto: manifiesto,
+      nombre_cliente: nombre_cliente,
+      direccion: direccion,
+      comuna: comuna,
+      fecha: fecha,
     });
     console.log(itemValue);
   }
 
   function Camera() {
-    // setIsvisibleLoading(false);
+    // isVisibleLoadingCam(true);
     if (!imageUrlBol) {
       return (
         <View>
@@ -308,8 +313,8 @@ export default function ManageOrder(props) {
               containerStyle={styles.containerIcon}
               onPress={getImageFromCamera}
             />
-            {<Loading isVisible={isVisibleLoading} text="Cargando Foto" />}
           </TouchableOpacity>
+          {<Loading isVisible={isVisibleLoadingCam} text="Cargando Foto" />}
         </View>
       );
     } else {
@@ -323,7 +328,7 @@ export default function ManageOrder(props) {
               style={styles.image}
             />
           </TouchableOpacity>
-          {<Loading isVisible={isVisibleLoading} text="Cargando Foto" />}
+          {<Loading isVisible={isVisibleLoadingCam} text="Cargando Foto" />}
         </View>
       );
     }
@@ -416,11 +421,11 @@ export default function ManageOrder(props) {
     let year = new Date().getFullYear(); //Current Year
     let hours = new Date().getHours(); //Current Hours
     if (hours < 10) {
-      hours = "0" + sec;
+      hours = "0" + hours;
     }
     let min = new Date().getMinutes(); //Current Minutes
     if (min < 10) {
-      min = "0" + sec;
+      min = "0" + min;
     }
     let sec = new Date().getSeconds(); //Current Seconds
     if (sec < 10) {
@@ -433,22 +438,109 @@ export default function ManageOrder(props) {
     return datetime;
   }
 
+  async function RememberOrders(bd) {
+    try {
+      await AsyncStorage.removeItem("@localStorage:dataOrder");
+      await AsyncStorage.setItem("@localStorage:dataOrder", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function RemoveItemValue(key) {
+    try {
+      await AsyncStorage.removeItem(key);
+      console.log("RemoveItemValue");
+      return true;
+    } catch (exception) {
+      console.log("RemoveItemValue Error");
+      return false;
+    }
+  }
+
   async function SaveOrder() {
+    const credentialsUser = await AsyncStorage.getItem(
+      "@localStorage:dataOrder"
+    );
+
     if (selectedValueState == "cero") {
       toastRef.current.show("Debes seleccionar estado");
     } else {
       setIsvisibleLoading(true);
+
+      let solicitud = 1;
+      let tipo = null;
+      if (
+        selectedValueState == "Direccion Erronea" &&
+        tipo_despacho == "dedicado_regiones"
+      ) {
+        solicitud = pedido;
+        tipo = "Direccion Erronea";
+      }
+
+      const params = new FormData();
+      let signaturels = 0; //variable para localStorage
+      if (signature) {
+        params.append("imgFirma", signature);
+        signaturels = 1;
+      }
+
       const resultGeo = await getLocation();
       let fecha_gestion = getDatetime();
       let date = new Date();
       let hour = date.getHours() + ":00";
-
       let localUri;
       let filename;
       let match;
       let type;
 
-      const params = new FormData();
+      let fotols = 0;
+      if (!imageUrlBol) {
+        localUri = "";
+        filename = "";
+        match = "";
+        type = "";
+      } else {
+        localUri = imageUrl;
+        filename = localUri.split("/").pop();
+        match = /\.(\w+)$/.exec(filename);
+        type = match ? `image/${match[1]}` : `image`;
+        params.append("imgPedido", { uri: localUri, name: filename, type });
+        fotols = 1;
+      }
+
+      if (credentialsUser !== null) {
+        const listData = JSON.parse(credentialsUser).filter(
+          (pedidoF) => pedidoF.pedido !== pedido
+        );
+
+        var obj = {
+          carrier: carrierUser,
+          comuna: comuna,
+          direccion: direccion,
+          estado_entrega: selectedValueState,
+          fecha: fecha,
+          gestion_usuario: user,
+          id_solicitudes_carrier_sac_estado: null,
+          latitud: null,
+          longitud: null,
+          manifiesto: manifiesto,
+          nombre_cliente: nombre_cliente,
+          observacion_sac: null,
+          pedido: pedido,
+          recibe_nombre: name ? name : "",
+          recibe_rut: rut ? rut : "",
+          ruta_firma: signaturels,
+          ruta_foto: fotols,
+          solicitud: solicitud,
+          tipo_solicitud: tipo,
+          visto_proveedor: null,
+          tipo_despacho: tipo_despacho,
+        };
+        await listData.push(obj);
+        await RememberOrders(JSON.stringify(listData));
+      }
+
       params.append("opcion", "guardaPedido");
       params.append("pedido", pedido);
       params.append("manifiesto", manifiesto);
@@ -462,24 +554,8 @@ export default function ManageOrder(props) {
       params.append("longitud", resultGeo.coords.longitude);
       params.append("recibe_nombre", name ? name : "");
       params.append("recibe_rut", rut ? rut : "");
-      if (signature) {
-        params.append("imgFirma", signature);
-      }
-
-      if (!imageUrlBol) {
-        localUri = "";
-        filename = "";
-        match = "";
-        type = "";
-      } else {
-        localUri = imageUrl;
-        filename = localUri.split("/").pop();
-        match = /\.(\w+)$/.exec(filename);
-        type = match ? `image/${match[1]}` : `image`;
-
-        params.append("imgPedido", { uri: localUri, name: filename, type });
-      }
-
+      params.append("observacion", observacion);
+      params.append("tipo_despacho", tipo_despacho);
       axios
         .post(url, params, {
           headers: {
@@ -496,6 +572,9 @@ export default function ManageOrder(props) {
             console.log("Error Conexión: " + error);
           }
         });
+
+      //setIsvisibleLoading(false);
+      //navigation.goBack();
     }
   }
 
@@ -566,8 +645,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     marginTop: 5,
     borderRadius: 15,
-    marginBottom: 18,
-
+    marginBottom: 38,
     width: "80%",
   },
   buttonText: {

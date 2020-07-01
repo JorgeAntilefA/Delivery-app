@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  AsyncStorage,
 } from "react-native";
 import { Icon, ListItem, CheckBox } from "react-native-elements";
 import axios from "axios";
@@ -26,6 +27,7 @@ export default function ModifyManagedOrder(props) {
     direccion,
     pedido,
     nombre_cliente,
+    comuna,
     carrier,
     manifiesto,
     user,
@@ -36,6 +38,7 @@ export default function ModifyManagedOrder(props) {
     recibe_rut,
     ruta_foto,
     ruta_firma,
+    tipo_despacho,
   } = route.params;
 
   const [selectedValueState, setSelectedState] = useState(estado_entrega);
@@ -58,8 +61,6 @@ export default function ModifyManagedOrder(props) {
   const { name } = route.params;
   const { rut } = route.params;
   const isFocused = useIsFocused();
-  console.log(ruta_foto);
-  console.log(ruta_firma);
 
   const [checkedFoto, setCheckedFoto] = useState(
     ruta_foto == "1" ? true : false
@@ -103,7 +104,6 @@ export default function ModifyManagedOrder(props) {
     const cameraRollPermission = await Permissions.askAsync(
       Permissions.CAMERA_ROLL
     );
-    // console.log(cameraPermission);
     if (
       cameraPermission.status === "granted" &&
       cameraRollPermission.status === "granted"
@@ -256,37 +256,6 @@ export default function ModifyManagedOrder(props) {
         </View>
       </View>
     );
-
-    // if (selectedValueState == "Entregado") {
-    //   return (
-    //     <View>
-    //       <Input
-    //         style={styles.inputForm}
-    //         placeholder={!rutCli ? "11111111-1" : rutCli}
-    //         placeholderColor="#c4c3cb"
-    //         value={rutCli}
-    //         onChange={(e) => setRutCli(e.nativeEvent.text)}
-    //       />
-    //       <Input
-    //         style={styles.inputForm}
-    //         placeholder={!nameCli ? "Cliente" : nameCli}
-    //         placeholderColor="#c4c3cb"
-    //         value={nameCli}
-    //         onChange={(e) => setName(e.nativeEvent.text)}
-    //       />
-    //     </View>
-    //   );
-    // } else {
-    //   return (
-    //     <View>
-    //       <Customer />
-    //       <View style={styles.imageContainer}>
-    //         <Camera />
-    //         <Signature />
-    //       </View>
-    //     </View>
-    //   );
-    // }
   }
 
   const listInfo = [
@@ -450,11 +419,11 @@ export default function ModifyManagedOrder(props) {
     let year = new Date().getFullYear(); //Current Year
     let hours = new Date().getHours(); //Current Hours
     if (hours < 10) {
-      hours = "0" + sec;
+      hours = "0" + hours;
     }
     let min = new Date().getMinutes(); //Current Minutes
     if (min < 10) {
-      min = "0" + sec;
+      min = "0" + min;
     }
     let sec = new Date().getSeconds(); //Current Seconds
     if (sec < 10) {
@@ -467,23 +436,102 @@ export default function ModifyManagedOrder(props) {
     return datetime;
   }
 
+  async function RememberOrders(bd) {
+    try {
+      await AsyncStorage.removeItem("@localStorage:dataOrder");
+      await AsyncStorage.setItem("@localStorage:dataOrder", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async function SaveOrder() {
+    const credentialsUser = await AsyncStorage.getItem(
+      "@localStorage:dataOrder"
+    );
+
     if (selectedValueState == "cero") {
-      toastRef.current.show("Debes selecciona estado");
+      toastRef.current.show("Debes seleccionar estado");
     } else {
       setIsvisibleLoading(true);
+      const params = new FormData();
+
+      let signaturels = 0; //variable para localStorage
+      if (signature) {
+        params.append("imgFirma", signature);
+        signaturels = 1;
+      }
+
       const resultGeo = await getLocation();
       let fecha_gestion = getDatetime();
-
       let date = new Date();
       let hour = date.getHours() + ":00";
-
       let localUri;
       let filename;
       let match;
       let type;
-      console.log(selectedValueStateFinal);
-      const params = new FormData();
+
+      let fotols = 0;
+      if (!imageUrlBol) {
+        localUri = "";
+        filename = "";
+        match = "";
+        type = "";
+      } else {
+        localUri = imageUrl;
+        filename = localUri.split("/").pop();
+        match = /\.(\w+)$/.exec(filename);
+        type = match ? `image/${match[1]}` : `image`;
+        params.append("imgPedido", { uri: localUri, name: filename, type });
+        fotols = 1;
+      }
+
+      if (credentialsUser !== null) {
+        const listData = JSON.parse(credentialsUser).filter(
+          (pedidoF) => pedidoF.pedido !== pedido
+        );
+
+        let solicitud = 1;
+        let tipo_solicitud = "";
+
+        if (
+          selectedValueState == "Domicilio Sin Moradores" &&
+          tipo_despacho == "dedicado_regiones" &&
+          (selectedValueStateFinal == "Domicilio Sin Moradores" ||
+            selectedValueStateFinal == null)
+        ) {
+          solicitud = pedido;
+          tipo_solicitud = "Domicilio Sin Moradores";
+        }
+
+        var obj = {
+          carrier: carrierUser,
+          comuna: comuna,
+          direccion: direccion,
+          estado_entrega: selectedValueStateFinal
+            ? selectedValueStateFinal
+            : selectedValueState,
+          fecha: fecha,
+          gestion_usuario: user,
+          id_solicitudes_carrier_sac_estado: null,
+          manifiesto: manifiesto,
+          nombre_cliente: nombre_cliente,
+          observacion_sac: null,
+          pedido: pedido,
+          recibe_nombre: name ? name : "",
+          recibe_rut: rut ? rut : "",
+          ruta_firma: signaturels,
+          ruta_foto: fotols,
+          solicitud: solicitud,
+          tipo_solicitud: tipo_solicitud,
+          tipo_despacho: tipo_despacho,
+          visto_proveedor: null,
+        };
+        await listData.push(obj);
+        console.log(obj);
+        await RememberOrders(JSON.stringify(listData));
+      }
+
       params.append("opcion", "guardaPedido");
       params.append("pedido", pedido);
       params.append("manifiesto", manifiesto);
@@ -498,23 +546,10 @@ export default function ModifyManagedOrder(props) {
       params.append("carrier", carrierUser);
       params.append("latitud", resultGeo.coords.latitude);
       params.append("longitud", resultGeo.coords.longitude);
-      params.append("recibe_nombre", name);
-      params.append("recibe_rut", rut);
-      params.append("imgFirma", signature);
-
-      if (!imageUrlBol) {
-        localUri = "";
-        filename = "";
-        match = "";
-        type = "";
-      } else {
-        localUri = imageUrl;
-        filename = localUri.split("/").pop();
-        match = /\.(\w+)$/.exec(filename);
-        type = match ? `image/${match[1]}` : `image`;
-
-        params.append("imgPedido", { uri: localUri, name: filename, type });
-      }
+      params.append("recibe_nombre", name ? name : "");
+      params.append("recibe_rut", rut ? rut : "");
+      params.append("observacion", observacion);
+      params.append("tipo_despacho", tipo_despacho);
 
       axios
         .post(url, params, {
@@ -524,15 +559,14 @@ export default function ModifyManagedOrder(props) {
         })
         .then((response) => {
           //navigation.goBack();
-          // navigation.navigate("managedOrders");
-          navigation.goBack();
-          navigation.navigate("pendings", {
-            screen: "pendientes",
-          });
+          navigation.navigate("managedOrders");
+          // navigation.goBack();
+          // navigation.navigate("manageOrder", {
+          //   screen: "pendientes",
+          // });
           setIsvisibleLoading(false);
         })
         .catch((error) => {
-          //console.log();
           if (isNetworkError(error)) {
             console.log("Error Conexión: " + error);
           }

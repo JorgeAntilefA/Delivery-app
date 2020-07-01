@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Picker,
   TouchableOpacity,
+  AsyncStorage,
   Image,
 } from "react-native";
 import { ListItem, Button, Icon } from "react-native-elements";
@@ -21,6 +22,7 @@ export default function ResponseIncidentsForm(props) {
   const { navigation, route } = props;
   const {
     direccion,
+    comuna,
     pedido,
     nombre_cliente,
     manifiesto,
@@ -30,6 +32,8 @@ export default function ResponseIncidentsForm(props) {
     observacion_sac,
     fecha,
     visto_proveedor,
+    id_solicitudes_carrier_sac_estado,
+    tipo_despacho,
   } = route.params;
   console.log(visto_proveedor);
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
@@ -233,29 +237,32 @@ export default function ResponseIncidentsForm(props) {
   }
 
   async function SaveCheck() {
-    setIsvisibleLoading(true);
+    if (id_solicitudes_carrier_sac_estado !== "3") {
+      toastRef.current.show("Falta confirmación SAC");
+    } else {
+      setIsvisibleLoading(true);
+      const params = new FormData();
+      params.append("opcion", "checkProveedor");
+      params.append("visto_proveedor", true);
+      params.append("visto_usuario", user);
+      params.append("manifiesto", manifiesto);
+      params.append("pedido", pedido);
 
-    const params = new FormData();
-    params.append("opcion", "checkProveedor");
-    params.append("visto_proveedor", true);
-    params.append("visto_usuario", user);
-    params.append("manifiesto", manifiesto);
-    params.append("pedido", pedido);
+      await axios
+        .post(url, params)
+        .then((response) => {
+          // console.log(JSON.parse(response).guardado);
 
-    await axios
-      .post(url, params)
-      .then((response) => {
-        // console.log(JSON.parse(response).guardado);
-
-        setVisto(true);
-        setIsvisibleLoading(false);
-      })
-      .catch((error) => {
-        //console.log();
-        if (isNetworkError(error)) {
-          console.log("Error Conexión: " + error);
-        }
-      });
+          setVisto(true);
+          setIsvisibleLoading(false);
+        })
+        .catch((error) => {
+          //console.log();
+          if (isNetworkError(error)) {
+            console.log("Error Conexión: " + error);
+          }
+        });
+    }
   }
   function isNetworkError(err) {
     return !!err.isAxiosError && !err.response;
@@ -392,70 +399,131 @@ export default function ResponseIncidentsForm(props) {
     }
   }
 
+  async function RememberOrders(bd) {
+    try {
+      await AsyncStorage.removeItem("@localStorage:dataOrder");
+      await AsyncStorage.setItem("@localStorage:dataOrder", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async function SaveOrder() {
-    if (selectedValueState == "cero") {
-      toastRef.current.show("Debes seleccionar estado");
+    const credentialsUser = await AsyncStorage.getItem(
+      "@localStorage:dataOrder"
+    );
+    if (id_solicitudes_carrier_sac_estado !== "3") {
+      toastRef.current.show("Falta confirmación SAC");
     } else {
-      setIsvisibleLoading(true);
-      const resultGeo = await getLocation();
-      let fecha_gestion = getDatetime();
-      let date = new Date();
-      let hour = date.getHours() + ":00";
-
-      let localUri;
-      let filename;
-      let match;
-      let type;
-      console.log();
-      const params = new FormData();
-      params.append("opcion", "guardaPedido");
-      params.append("pedido", pedido);
-      params.append("manifiesto", manifiesto);
-      params.append("fecha_manifiesto", fecha);
-      params.append("hora_gestion", hour);
-      params.append("fecha_gestion", fecha_gestion);
-      params.append("estado_entrega", selectedValueState);
-      params.append("encargado", user);
-      params.append("carrier", carrierUser);
-      params.append("latitud", resultGeo.coords.latitude);
-      params.append("longitud", resultGeo.coords.longitude);
-      params.append("recibe_nombre", name ? name : "");
-      params.append("recibe_rut", rut ? rut : "");
-      if (signature) {
-        params.append("imgFirma", signature);
-      }
-
-      if (!imageUrlBol) {
-        localUri = "";
-        filename = "";
-        match = "";
-        type = "";
+      if (selectedValueState == "cero" && tipo_solicitud !== "Devolver OP") {
+        toastRef.current.show("Debes seleccionar estado");
       } else {
-        localUri = imageUrl;
-        filename = localUri.split("/").pop();
-        match = /\.(\w+)$/.exec(filename);
-        type = match ? `image/${match[1]}` : `image`;
+        if (!visto) {
+          toastRef.current.show("Debes revisar la solicitud");
+        } else {
+          setIsvisibleLoading(true);
 
-        params.append("imgPedido", { uri: localUri, name: filename, type });
-      }
+          const params = new FormData();
 
-      axios
-        .post(url, params, {
-          headers: {
-            "content-type": "multipart/form-data",
-          },
-        })
-        .then((response) => {
-          setIsvisibleLoading(false);
-          navigation.goBack();
-          navigation.navigate("pendings");
-        })
-        .catch((error) => {
-          console.log(error);
-          if (isNetworkError(error)) {
-            console.log("Error Conexión: " + error);
+          let signaturels = 0; //variable para localStorage
+          if (signature) {
+            params.append("imgFirma", signature);
+            signaturels = 1;
           }
-        });
+
+          const resultGeo = await getLocation();
+          let fecha_gestion = getDatetime();
+          let date = new Date();
+          let hour = date.getHours() + ":00";
+          let localUri;
+          let filename;
+          let match;
+          let type;
+
+          let fotols = 0;
+          if (!imageUrlBol) {
+            localUri = "";
+            filename = "";
+            match = "";
+            type = "";
+          } else {
+            localUri = imageUrl;
+            filename = localUri.split("/").pop();
+            match = /\.(\w+)$/.exec(filename);
+            type = match ? `image/${match[1]}` : `image`;
+            params.append("imgPedido", { uri: localUri, name: filename, type });
+            fotols = 1;
+          }
+
+          if (credentialsUser !== null) {
+            const listData = JSON.parse(credentialsUser).filter(
+              (pedidoF) => pedidoF.pedido !== pedido
+            );
+
+            var obj = {
+              carrier: carrierUser,
+              comuna: comuna,
+              direccion: direccion,
+              estado_entrega: selectedValueState,
+              fecha: fecha,
+              gestion_usuario: 1,
+              id_solicitudes_carrier_sac_estado: 3,
+              manifiesto: manifiesto,
+              nombre_cliente: nombre_cliente,
+              observacion_sac: observacion_sac,
+              pedido: pedido,
+              recibe_nombre: name ? name : "",
+              recibe_rut: rut ? rut : "",
+              ruta_firma: signaturels,
+              ruta_foto: fotols,
+              solicitud: 1,
+              tipo_solicitud: tipo_solicitud,
+              visto_proveedor: visto_proveedor,
+            };
+            await listData.push(obj);
+            console.log(obj);
+            await RememberOrders(JSON.stringify(listData));
+          }
+
+          if (tipo_solicitud !== "Devolver OP") {
+            params.append("opcion", "guardaPedido");
+            params.append("pedido", pedido);
+            params.append("manifiesto", manifiesto);
+            params.append("fecha_manifiesto", fecha);
+            params.append("hora_gestion", hour);
+            params.append("fecha_gestion", fecha_gestion);
+            params.append("estado_entrega", selectedValueState);
+            params.append("encargado", user);
+            params.append("carrier", carrierUser);
+            params.append("latitud", resultGeo.coords.latitude);
+            params.append("longitud", resultGeo.coords.longitude);
+            params.append("recibe_nombre", name ? name : "");
+            params.append("recibe_rut", rut ? rut : "");
+            params.append("gestion_usuario", 1);
+
+            axios
+              .post(url, params, {
+                headers: {
+                  "content-type": "multipart/form-data",
+                },
+              })
+              .then((response) => {
+                setIsvisibleLoading(false);
+                //navigation.goBack();
+                navigation.navigate("incidentsList");
+              })
+              .catch((error) => {
+                console.log(error);
+                if (isNetworkError(error)) {
+                  console.log("Error Conexión: " + error);
+                }
+              });
+          }
+          setIsvisibleLoading(false);
+          //navigation.goBack();
+          navigation.navigate("incidentsList");
+        }
+      }
     }
   }
 }

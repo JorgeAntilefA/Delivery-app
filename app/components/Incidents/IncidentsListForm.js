@@ -5,15 +5,14 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   AsyncStorage,
 } from "react-native";
 import Constants from "./../../utils/Constants";
-// import { Input, Icon } from "@ui-kitten/components";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Input } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
 import { FAB } from "react-native-paper";
+import Loading from "../Loading";
 
 export default function IncidentsListForm(props) {
   const isFocused = useIsFocused();
@@ -23,11 +22,12 @@ export default function IncidentsListForm(props) {
   const { navigation, route } = props;
   const [data, setData] = useState();
   const [arrayholder, setArrayholder] = useState([]);
+  const [isVisibleLoading, setIsvisibleLoading] = useState(false);
 
   useEffect(() => {
     if (isFocused) {
-      console.log("focus");
       const getRememberedOrders = async () => {
+        setIsvisibleLoading(true);
         try {
           const credentialsUser = await AsyncStorage.getItem(
             "@localStorage:dataOrder"
@@ -36,12 +36,12 @@ export default function IncidentsListForm(props) {
           if (credentialsUser !== null) {
             const listData = JSON.parse(credentialsUser).filter(
               (pedido) =>
-                //country.pedido.includes(lowerCaseQuery) &&
                 pedido.solicitud != "1" && pedido.gestion_usuario != "1"
             );
 
             setData(listData);
             setArrayholder(listData);
+            setIsvisibleLoading(false);
           }
         } catch (error) {
           console.log(error);
@@ -91,30 +91,44 @@ export default function IncidentsListForm(props) {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={styles.containerInput}>
-        {/* <Input
-          style={styles.SectionStyle}
-          onChangeText={(text) => searchData(text)}
-          keyboardType="numeric"
-          accessoryLeft={renderIcon}
-          placeholder="Busqueda"
-        /> */}
-        <Input
-          inputContainerStyle={styles.SectionStyle}
-          placeholder="Busqueda"
-          onChangeText={(text) => searchData(text)}
-          keyboardType="numeric"
-          leftIcon={
+      <View style={{ flexDirection: "row" }}>
+        <View style={{ width: "100%", height: 50, backgroundColor: "#272626" }}>
+          <Input
+            inputContainerStyle={styles.SectionStyle}
+            placeholder="Busqueda"
+            onChangeText={(text) => searchData(text)}
+            keyboardType="numeric"
+            //inputContainerStyle={{ width: "40%", backgroundColor: "red" }}
+            leftIcon={
+              <Icon
+                name="search"
+                size={24}
+                color="black"
+                style={{ marginLeft: 5 }}
+              />
+            }
+          />
+        </View>
+        {/* <View
+          style={{
+            width: "20%",
+            height: 50,
+            backgroundColor: "#272626",
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => console.log("wrw")}
+            activeOpacity={0.5}
+          >
             <Icon
-              name="search"
-              size={24}
-              color="black"
-              style={{ marginLeft: 5 }}
+              name="refresh"
+              size={34}
+              color="white"
+              style={{ marginLeft: 5, marginTop: 5 }}
             />
-          }
-        />
+          </TouchableOpacity>
+        </View> */}
       </View>
-
       <View
         style={{
           height: 20,
@@ -142,6 +156,7 @@ export default function IncidentsListForm(props) {
         ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
       />
       <ManifestButton />
+      {<Loading isVisible={isVisibleLoading} text="Cargando" />}
     </View>
   );
 
@@ -172,7 +187,7 @@ export default function IncidentsListForm(props) {
       visto_proveedor,
     } = props.item;
     const { navigation, user, carrierUser } = props;
-    console.log(visto_proveedor);
+
     return (
       <TouchableOpacity
         onPress={() =>
@@ -180,6 +195,7 @@ export default function IncidentsListForm(props) {
             pedido: pedido,
             manifiesto: manifiesto,
             direccion: direccion,
+            comuna: comuna,
             nombre_cliente: nombre_cliente,
             carrier: carrier,
             fecha: fecha,
@@ -188,6 +204,7 @@ export default function IncidentsListForm(props) {
             tipo_solicitud: tipo_solicitud,
             observacion_sac: observacion_sac,
             visto_proveedor: visto_proveedor,
+            id_solicitudes_carrier_sac_estado: id_solicitudes_carrier_sac_estado,
           })
         }
       >
@@ -295,8 +312,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   containerInput: {
-    backgroundColor: "#272626",
+    //backgroundColor: "#272626",
+    flexDirection: "row",
+    backgroundColor: "red",
     height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    // width: "90%",
   },
   inputForm: {
     height: 30,
@@ -305,13 +327,27 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.2)",
   },
   SectionStyle: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#fff",
     borderWidth: 0.5,
     borderColor: "#000",
+    marginTop: 5,
     height: 35,
+    width: "90%",
     borderRadius: 5,
+  },
+  IconRefresh: {
+    backgroundColor: "green",
+    //  width: "30%",
+  },
+  buttonContainer: {
+    backgroundColor: "#f7c744",
+    marginTop: 5,
+    borderRadius: 15,
+  },
+  buttonText: {
+    textAlign: "center",
+    color: "rgb(32,53,70)",
+    fontWeight: "bold",
+    fontSize: 18,
   },
 });

@@ -24,41 +24,45 @@ export default function ManagedOrdersForm(props) {
   const [arrayholder, setArrayholder] = useState([]);
 
   useEffect(() => {
-    const getRememberedOrders = async () => {
-      try {
-        const credentialsUser = await AsyncStorage.getItem(
-          "@localStorage:dataOrder"
-        );
-
-        if (credentialsUser !== null) {
-          const listData = JSON.parse(credentialsUser).filter(
-            (pedido) =>
-              //country.pedido.includes(lowerCaseQuery) &&
-              pedido.estado_entrega !== "Sin Estado"
+    if (isFocused) {
+      const getRememberedOrders = async () => {
+        try {
+          const credentialsUser = await AsyncStorage.getItem(
+            "@localStorage:dataOrder"
           );
 
-          setData(listData);
-          setArrayholder(listData);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
+          if (credentialsUser !== null) {
+            const listData = JSON.parse(credentialsUser).filter(
+              (pedido) =>
+                pedido.estado_entrega !== "Sin Estado" &&
+                (pedido.solicitud == "1" || pedido.gestion_usuario == "1")
+            );
 
-    const getRememberedTitle = async () => {
-      try {
-        const carrierTitle = await AsyncStorage.getItem("@localStorage:title");
-        if (carrierTitle !== null) {
-          setUserTitle(JSON.parse(carrierTitle).user);
-          setCarrierTitle(JSON.parse(carrierTitle).carrier);
+            setData(listData);
+            setArrayholder(listData);
+          }
+        } catch (error) {
+          console.log(error);
         }
-      } catch (error) {
-        console.log(error);
-      }
-    };
+      };
 
-    getRememberedOrders();
-    getRememberedTitle();
+      const getRememberedTitle = async () => {
+        try {
+          const carrierTitle = await AsyncStorage.getItem(
+            "@localStorage:title"
+          );
+          if (carrierTitle !== null) {
+            setUserTitle(JSON.parse(carrierTitle).user);
+            setCarrierTitle(JSON.parse(carrierTitle).carrier);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      getRememberedOrders();
+      getRememberedTitle();
+    }
   }, [isFocused]);
 
   function searchData(text) {
@@ -139,6 +143,7 @@ function Order(props) {
     recibe_rut,
     ruta_foto,
     ruta_firma,
+    tipo_despacho,
   } = props.item;
   const { navigation, user, carrierUser } = props;
 
@@ -149,6 +154,7 @@ function Order(props) {
           pedido: pedido,
           manifiesto: manifiesto,
           direccion: direccion,
+          comuna: comuna,
           nombre_cliente: nombre_cliente,
           carrier: carrier,
           fecha: fecha,
@@ -159,6 +165,7 @@ function Order(props) {
           recibe_rut: recibe_rut,
           ruta_foto: ruta_foto,
           ruta_firma: ruta_firma,
+          tipo_despacho: tipo_despacho,
         })
       }
     >

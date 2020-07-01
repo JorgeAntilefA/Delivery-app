@@ -10,9 +10,10 @@ import {
   TouchableWithoutFeedback,
   RefreshControl,
 } from "react-native";
-import { Input, Icon } from "@ui-kitten/components";
-import axios from "axios";
 import Constants from "./../../utils/Constants";
+import Icon from "react-native-vector-icons/FontAwesome";
+import { Input } from "react-native-elements";
+import axios from "axios";
 import Loading from "../Loading";
 import { useIsFocused } from "@react-navigation/native";
 
@@ -23,9 +24,10 @@ export default function PendingOrdersForm(props) {
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
   const isFocused = useIsFocused();
   const { url } = Constants;
-  const { manifesto, carrier, user } = route.params;
+  const { manifiesto, carrier, user } = route.params;
+  //  const { carrier, user } = route.params;
 
-  let manifiestos = manifesto;
+  // let manifiestos = manifesto;
   const userP = user;
   const carrierUser = carrier;
   const [refresh, setRefresh] = useState(0);
@@ -38,35 +40,43 @@ export default function PendingOrdersForm(props) {
       const getPendingOrders = async () => {
         setIsvisibleLoading(true);
         setText("");
-        const params = new URLSearchParams();
-        params.append("opcion", "getPedidosV3");
-        params.append("manifiestos", manifiestos.toString());
+        const credentialsUser = await AsyncStorage.getItem(
+          "@localStorage:dataOrder"
+        );
 
-        await axios
-          .post(url, params)
-          .then((response) => {
-            //  console.log(JSON.parse(response.data.trim()));
-            rememberOrders(response.data.trim());
-            const listData = JSON.parse(response.data.trim()).filter(
-              (pedido) =>
-                pedido.estado_entrega === "Sin Estado" &&
-                pedido.solicitud == "1"
-            );
+        if (credentialsUser !== null) {
+          const listData = JSON.parse(credentialsUser).filter(
+            (pedido) =>
+              //country.pedido.includes(lowerCaseQuery) &&
+              pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
+          );
 
-            setData(listData);
-            setArrayholder(listData);
-
-            //setData()
-            setIsvisibleLoading(false);
-            setRefreshing(false);
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+          setData(listData);
+          setArrayholder(listData);
+        }
+        setIsvisibleLoading(false);
       };
+
       getPendingOrders();
     }
   }, [isFocused]);
+
+  async function cargaData() {
+    const credentialsUser = await AsyncStorage.getItem(
+      "@localStorage:dataOrder"
+    );
+
+    if (credentialsUser !== null) {
+      const listData = JSON.parse(credentialsUser).filter(
+        (pedido) =>
+          //country.pedido.includes(lowerCaseQuery) &&
+          pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
+      );
+      console.log(listData);
+      setData(listData);
+      setArrayholder(listData);
+    }
+  }
 
   function searchData(text) {
     const newData = arrayholder.filter((item) => {
@@ -77,26 +87,39 @@ export default function PendingOrdersForm(props) {
   }
   const rememberOrders = async (bd) => {
     try {
+      await AsyncStorage.removeItem("@localStorage:dataOrder");
       await AsyncStorage.setItem("@localStorage:dataOrder", bd);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const removeOrders = async () => {
-    try {
-      await AsyncStorage.removeItem("@localStorage:dataOrder");
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    //console.log("actualizado");
+    const params = new URLSearchParams();
+    params.append("opcion", "getPedidosV3");
+    params.append("manifiestos", manifiesto.toString());
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    // load();
-    console.log("actualizado");
-    setRefreshing(true);
-    //setRefreshing(false);
+    await axios
+      .post(url, params)
+      .then((response) => {
+        rememberOrders(response.data.trim());
+
+        const listData = JSON.parse(response.data.trim()).filter(
+          (pedido) =>
+            pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
+        );
+
+        setData(listData);
+        setArrayholder(listData);
+
+        setRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setRefreshing(false);
+      });
   }, [refreshing]);
 
   const renderIcon = (props) => (
@@ -107,16 +130,39 @@ export default function PendingOrdersForm(props) {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={styles.containerInput}>
-        <Input
-          style={styles.inputForm}
-          onChangeText={(text) => searchData(text)}
-          onChange={(e) => setText(e.nativeEvent.text)}
-          keyboardType="numeric"
-          value={text}
-          accessoryLeft={renderIcon}
-          placeholder="Busqueda"
-        />
+      <View style={{ flexDirection: "row" }}>
+        <View style={{ width: "80%", height: 50, backgroundColor: "#272626" }}>
+          <Input
+            inputContainerStyle={styles.SectionStyle}
+            placeholder="Busqueda"
+            onChangeText={(text) => searchData(text)}
+            keyboardType="numeric"
+            leftIcon={
+              <Icon
+                name="search"
+                size={24}
+                color="black"
+                style={{ marginLeft: 5 }}
+              />
+            }
+          />
+        </View>
+        <View
+          style={{
+            width: "20%",
+            height: 50,
+            backgroundColor: "#272626",
+          }}
+        >
+          <TouchableOpacity onPress={() => onRefresh()} activeOpacity={0.5}>
+            <Icon
+              name="refresh"
+              size={34}
+              color="white"
+              style={{ marginLeft: 5, marginTop: 5 }}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
       <View
         style={{
@@ -177,6 +223,7 @@ function Order(props) {
     fecha,
     latitud,
     longitud,
+    tipo_despacho,
   } = props.item;
   const { navigation, user, carrierUser } = props;
 
@@ -195,6 +242,7 @@ function Order(props) {
           carrierUser: carrierUser,
           latitud: latitud,
           longitud: longitud,
+          tipo_despacho: tipo_despacho,
         })
       }
     >
@@ -234,7 +282,7 @@ const styles = StyleSheet.create({
     borderColor: "#000",
     height: 40,
     borderRadius: 5,
-    margin: 10,
+    margin: 5,
   },
   ImageStyle: {
     padding: 10,

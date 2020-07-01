@@ -200,26 +200,52 @@ export default function ManifestsForm(props) {
     </SafeAreaView>
   );
 
-  function ValidateManifests() {
+  async function ValidateManifests() {
     setIsvisibleLoading(true);
-    // if (selected.size == 0) {
-    //   toastRef.current.show("Debes seleccionar manifiesto");
-    // } else if (selected.size >= 5) {
-    //   toastRef.current.show("5 manifiestos máximo");
-    // } else {
-    //var fecha_gestion = new Date();
-    navigation.navigate("pendings", {
-      screen: "pendientes",
-      params: {
-        manifesto: [...selected.keys()],
-        carrier: carrier,
-        user: user,
-        //fecha_gestion: fecha_gestion.getTime(),
-      },
-    });
-    setSelected(new Map());
-    setIsvisibleLoading(false);
-    // }
+    if (selected.size == 0) {
+      toastRef.current.show("Debes seleccionar manifiesto");
+    } else if (selected.size >= 5) {
+      toastRef.current.show("5 manifiestos máximo");
+    } else {
+      let manifiestos = [...selected.keys()];
+      const params = new URLSearchParams();
+      params.append("opcion", "getPedidosV3");
+      params.append("manifiestos", manifiestos.toString());
+
+      await axios
+        .post(url, params)
+        .then((response) => {
+          RemenberOrders(response.data.trim());
+
+          navigation.navigate("pendings", {
+            screen: "pendientes",
+            params: {
+              manifiesto: [...selected.keys()],
+              carrier: carrier,
+              user: user,
+            },
+          });
+
+          //setData()
+          setIsvisibleLoading(false);
+          setRefreshing(false);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+
+      setSelected(new Map());
+      setIsvisibleLoading(false);
+    }
+  }
+
+  //const rememberOrders = async (bd) => {
+  async function RemenberOrders(bd) {
+    try {
+      await AsyncStorage.setItem("@localStorage:dataOrder", bd);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   function ManifestButton() {

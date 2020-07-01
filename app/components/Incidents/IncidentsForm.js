@@ -11,18 +11,23 @@ import {
 import { Input } from "@ui-kitten/components";
 import Constants from "./../../utils/Constants";
 import axios from "axios";
-import {
-  useIsFocused,
-  CommonActions,
-  StackActions,
-} from "@react-navigation/native";
+import { useIsFocused, StackActions } from "@react-navigation/native";
 import Toast from "react-native-easy-toast";
 import Loading from "../Loading";
 
 export default function IncidentsForm(props) {
   const isFocused = useIsFocused();
   const { navigation, route } = props;
-  const { solicitud, order, orderManifiesto } = route.params;
+  const {
+    solicitud,
+    order,
+    orderManifiesto,
+    comuna,
+    fecha,
+    direccion,
+    nombre_cliente,
+    tipo_despacho,
+  } = route.params;
 
   const [tracking, setTracking] = useState();
   const [observacion, setObservacion] = useState("");
@@ -40,6 +45,9 @@ export default function IncidentsForm(props) {
   const [carrierTitle, setCarrierTitle] = useState();
   const [disableBotton, setDisableBotton] = useState();
   const toastRef = useRef();
+  const { signature } = route.params;
+  const { name } = route.params;
+  const { rut } = route.params;
 
   function getListCarrier() {
     const params = new URLSearchParams();
@@ -214,6 +222,15 @@ export default function IncidentsForm(props) {
     );
   }
 
+  async function RememberOrders(bd) {
+    try {
+      await AsyncStorage.removeItem("@localStorage:dataOrder");
+      await AsyncStorage.setItem("@localStorage:dataOrder", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async function SaveIncidence() {
     if (solicitud == "Devolver OP" && tracking == "") {
       toastRef.current.show("Debes ingresar Numero de Envio");
@@ -221,49 +238,93 @@ export default function IncidentsForm(props) {
       if (solicitud == "Devolver OP" && selectedValueCarrier == "cero") {
         toastRef.current.show("Debes seleccionar Transporte");
       } else {
-        if (solicitud == "") {
-          toastRef.current.show("Debes seleccionar incidencia");
+        if (solicitud == "Devolver OP" && tracking == null) {
+          toastRef.current.show("Debes ingresar numero de envio");
         } else {
-          setIsvisibleLoading(true);
+          if (solicitud == "") {
+            toastRef.current.show("Debes seleccionar incidencia");
+          } else {
+            setIsvisibleLoading(true);
 
-          const params = new FormData();
-          params.append("opcion", "guardaSolicitud");
-          params.append("tipo", solicitud);
-          params.append("carrier", carrierTitle);
-          params.append("pedido", pedido);
-          params.append("manifiesto", manifiesto);
-          if (selectedValueCarrier != "cero") {
-            params.append("carrier_externo", selectedValueCarrier);
+            const credentialsUser = await AsyncStorage.getItem(
+              "@localStorage:dataOrder"
+            );
+
+            const params = new FormData();
+            if (credentialsUser !== null) {
+              const listData = JSON.parse(credentialsUser).filter(
+                (pedidoF) => pedidoF.pedido !== pedido
+              );
+
+              var obj = {
+                carrier: carrierTitle,
+                comuna: comuna,
+                direccion: direccion,
+                estado_entrega: null,
+                fecha: fecha,
+                //gestion_usuario: user,
+                id_solicitudes_carrier_sac_estado: 1,
+                latitud: null,
+                longitud: null,
+                manifiesto: manifiesto,
+                nombre_cliente: nombre_cliente,
+                observacion_sac: null,
+                pedido: pedido,
+                //recibe_nombre: name ? name : "",
+                //recibe_rut: rut ? rut : "",
+                //ruta_firma: signaturels,
+                //ruta_foto: fotols,
+                solicitud: pedido,
+                tipo_solicitud: solicitud,
+                visto_proveedor: null,
+                tipo_despacho: tipo_despacho,
+              };
+              await listData.push(obj);
+              await RememberOrders(JSON.stringify(listData));
+
+              console.log(obj);
+            }
+
+            params.append("opcion", "guardaSolicitud");
+            params.append("tipo", solicitud);
+            params.append("carrier", carrierTitle);
+            params.append("pedido", pedido);
+            params.append("manifiesto", manifiesto);
+            //if (selectedValueCarrier != "cero") {
+            params.append(
+              "carrier_externo",
+              selectedValueCarrier == "cero" ? "" : selectedValueCarrier
+            );
+            // }
+            //params.append("carrier_externo", selectedValueCarrier);
+            params.append("tracking", tracking ? tracking : "");
+            params.append("observacion", observacion);
+
+            await axios
+              .post(url, params)
+              .then((response) => {
+                // navigation.navigate("pendings", {
+                //   screen: "pendientes",
+                //   params: {
+                //     manifests: manifiesto,
+                //   },
+                // });
+
+                navigation.dispatch(StackActions.popToTop());
+
+                navigation.dispatch(resetAction);
+                setPedido("");
+                setManifiesto("");
+                setSelectedCarrier("");
+                setIsvisibleLoading(false);
+              })
+              .catch((error) => {
+                //console.log();
+                if (isNetworkError(error)) {
+                  console.log("Error Conexión: " + error);
+                }
+              });
           }
-          params.append("carrier_externo", selectedValueCarrier);
-          params.append("tracking", tracking);
-          params.append("observacion", observacion);
-
-          console.log(params);
-          await axios
-            .post(url, params)
-            .then((response) => {
-              // navigation.navigate("pendings", {
-              //   screen: "pendientes",
-              //   params: {
-              //     manifests: manifiesto,
-              //   },
-              // });
-
-              navigation.dispatch(StackActions.popToTop());
-
-              navigation.dispatch(resetAction);
-              setPedido("");
-              setManifiesto("");
-              setSelectedCarrier("");
-              setIsvisibleLoading(false);
-            })
-            .catch((error) => {
-              //console.log();
-              if (isNetworkError(error)) {
-                console.log("Error Conexión: " + error);
-              }
-            });
         }
       }
     }
