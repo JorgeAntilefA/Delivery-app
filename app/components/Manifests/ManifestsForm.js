@@ -20,7 +20,9 @@ import Toast from "react-native-easy-toast";
 export default function ManifestsForm(props) {
   const { navigation, route } = props;
   const [data, setData] = useState();
+  const [orders, setOrders] = useState();
   const { carrier, user } = route.params;
+
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
   const [selected, setSelected] = useState(new Map());
   const { url } = Constants;
@@ -51,28 +53,91 @@ export default function ManifestsForm(props) {
     return axios.post(url, params);
   }
 
-  const load = async () => {
-    await axios
-      .all([getListState(), getListIncidence(), getListManifest()])
-      .then(
-        axios.spread((...responses) => {
-          const responseListState = responses[0];
-          const responseListIncidence = responses[1];
-          const responseListManifest = responses[2];
-          //setSelectedValueS(JSON.parse(responseListState.data.trim()));
-          rememberStates(responseListState.data.trim());
-          rememberIncidents(responseListIncidence.data.trim());
+  // const load = async () => {
+  //   await axios
+  //     .all([getListState(), getListIncidence(), getListManifest()])
+  //     .then(
+  //       axios.spread((...responses) => {
+  //         const responseListState = responses[0];
+  //         const responseListIncidence = responses[1];
+  //         const responseListManifest = responses[2];
+  //         //setSelectedValueS(JSON.parse(responseListState.data.trim()));
+  //         // rememberStates(responseListState.data.trim());
+  //         //rememberIncidents(responseListIncidence.data.trim());
 
-          Platform.OS === "ios"
-            ? setData(responseListManifest.data)
-            : setData(JSON.parse(responseListManifest.data.trim()));
+  //         if (Platform.OS === "ios") {
+  //           console.log(responseListManifest.data);
+
+  //           setData(responseListManifest.data);
+  //           // RememberStates(responseListState.data.trim());
+  //           //rememberIncidents(responseListIncidence.data);
+  //         } else {
+  //           rememberStates(responseListState.data.trim());
+  //           rememberIncidents(responseListIncidence.data.trim());
+  //           setData(JSON.parse(responseListManifest.data.trim()));
+  //         }
+
+  //         setIsvisibleLoading(false);
+  //         setRefreshing(false);
+  //       })
+  //     )
+  //     .catch((errors) => {
+  //       console.log(errors);
+  //     });
+  // };
+
+  const load = async () => {
+    if (Platform.OS === "ios") {
+      const params = new URLSearchParams();
+      params.append("opcion", "getManifiestos");
+      params.append("carrier", carrier);
+
+      await axios
+        .post(url, params)
+        .then((response) => {
+          //rememberOrders(response.data.trim());
+          console.log(response.data);
+          setData(response.data);
           setIsvisibleLoading(false);
           setRefreshing(false);
         })
-      )
-      .catch((errors) => {
-        console.log(errors);
-      });
+        .catch((error) => {
+          console.log(error);
+          setIsvisibleLoading(false);
+          setRefreshing(false);
+        });
+    } else {
+      await axios
+        .all([getListState(), getListIncidence(), getListManifest()])
+        .then(
+          axios.spread((...responses) => {
+            const responseListState = responses[0];
+            const responseListIncidence = responses[1];
+            const responseListManifest = responses[2];
+            //setSelectedValueS(JSON.parse(responseListState.data.trim()));
+            // rememberStates(responseListState.data.trim());
+            //rememberIncidents(responseListIncidence.data.trim());
+
+            // if (Platform.OS === "ios") {
+            //   console.log(responseListManifest.data);
+
+            //   setData(responseListManifest.data);
+            //   // RememberStates(responseListState.data.trim());
+            //   //rememberIncidents(responseListIncidence.data);
+            // } else {
+            rememberStates(responseListState.data.trim());
+            rememberIncidents(responseListIncidence.data.trim());
+            setData(JSON.parse(responseListManifest.data.trim()));
+            // }
+
+            setIsvisibleLoading(false);
+            setRefreshing(false);
+          })
+        )
+        .catch((errors) => {
+          console.log(errors);
+        });
+    }
   };
 
   const rememberStates = async (bd) => {
@@ -94,7 +159,7 @@ export default function ManifestsForm(props) {
   useEffect(() => {
     const getManifests = async () => {
       setIsvisibleLoading(true);
-      load();
+      await load();
     };
     getManifests();
     setRefreshing(false);
@@ -149,7 +214,11 @@ export default function ManifestsForm(props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle='"light-content"' />
+      {Platform.OS === "ios" ? (
+        <StatusBar barStyle="dark-content" />
+      ) : (
+        <StatusBar barStyle="light-content" />
+      )}
       <View
         style={{
           height: 40,
@@ -215,8 +284,21 @@ export default function ManifestsForm(props) {
       await axios
         .post(url, params)
         .then((response) => {
-          RemenberOrders(response.data.trim());
-
+          //
+          //RemenberOrders(response.data);
+          //setOrders(response.data);
+          if (Platform.OS === "ios") {
+            try {
+              AsyncStorage.setItem(
+                "@localStorage:dataOrder",
+                JSON.stringify(response.data)
+              );
+            } catch (error) {
+              console.log(error);
+            }
+          } else {
+            RemenberOrders(response.data);
+          }
           navigation.navigate("pendings", {
             screen: "pendientes",
             params: {
@@ -233,7 +315,7 @@ export default function ManifestsForm(props) {
         .catch((error) => {
           console.log(error);
         });
-
+      //await RemenberOrders();
       setSelected(new Map());
       setIsvisibleLoading(false);
     }
@@ -241,6 +323,7 @@ export default function ManifestsForm(props) {
 
   //const rememberOrders = async (bd) => {
   async function RemenberOrders(bd) {
+    //console.log(bd);
     try {
       await AsyncStorage.setItem("@localStorage:dataOrder", bd);
     } catch (error) {

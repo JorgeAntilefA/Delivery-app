@@ -151,7 +151,7 @@ export default function LoginForm(props) {
               rememberUser();
               navigation.navigate("manifests", {
                 carrier: response.data.carrier,
-                nombre: response.data.nom,
+                user: response.data.nom,
               });
             }
           } else {

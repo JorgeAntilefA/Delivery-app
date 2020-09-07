@@ -29,6 +29,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   toast: {
-    marginTop: 180,
+    marginTop: 100,
   },
 });

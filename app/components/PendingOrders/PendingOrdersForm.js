@@ -9,6 +9,9 @@ import {
   AsyncStorage,
   TouchableWithoutFeedback,
   RefreshControl,
+  StatusBar,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import Constants from "./../../utils/Constants";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -43,7 +46,7 @@ export default function PendingOrdersForm(props) {
         const credentialsUser = await AsyncStorage.getItem(
           "@localStorage:dataOrder"
         );
-
+        console.log(credentialsUser);
         if (credentialsUser !== null) {
           const listData = JSON.parse(credentialsUser).filter(
             (pedido) =>
@@ -104,15 +107,34 @@ export default function PendingOrdersForm(props) {
     await axios
       .post(url, params)
       .then((response) => {
-        rememberOrders(response.data.trim());
+        //rememberOrders(response.data.trim());
 
-        const listData = JSON.parse(response.data.trim()).filter(
-          (pedido) =>
-            pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
-        );
-
-        setData(listData);
-        setArrayholder(listData);
+        if (Platform.OS === "ios") {
+          console.log(response.data);
+          try {
+            AsyncStorage.removeItem("@localStorage:dataOrder");
+            AsyncStorage.setItem(
+              "@localStorage:dataOrder",
+              JSON.stringify(response.data)
+            );
+          } catch (error) {
+            console.log(error);
+          }
+          const listData = response.data.filter(
+            (pedido) =>
+              pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
+          );
+          setData(listData);
+          setArrayholder(listData);
+        } else {
+          rememberOrders(response.data.trim());
+          const listData = JSON.parse(response.data.trim()).filter(
+            (pedido) =>
+              pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
+          );
+          setData(listData);
+          setArrayholder(listData);
+        }
 
         setRefreshing(false);
       })
@@ -129,74 +151,83 @@ export default function PendingOrdersForm(props) {
   );
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ width: "80%", height: 50, backgroundColor: "#272626" }}>
-          <Input
-            inputContainerStyle={styles.SectionStyle}
-            placeholder="Busqueda"
-            onChangeText={(text) => searchData(text)}
-            keyboardType="numeric"
-            leftIcon={
+    <SafeAreaView style={styles.container}>
+      {Platform.OS === "ios" ? (
+        <StatusBar barStyle="dark-content" />
+      ) : (
+        <StatusBar barStyle="light-content" />
+      )}
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row" }}>
+          <View
+            style={{ width: "80%", height: 50, backgroundColor: "#272626" }}
+          >
+            <Input
+              inputContainerStyle={styles.SectionStyle}
+              placeholder="Busqueda"
+              onChangeText={(text) => searchData(text)}
+              keyboardType="numeric"
+              leftIcon={
+                <Icon
+                  name="search"
+                  size={24}
+                  color="black"
+                  style={{ marginLeft: 5 }}
+                />
+              }
+            />
+          </View>
+          <View
+            style={{
+              width: "20%",
+              height: 50,
+              backgroundColor: "#272626",
+            }}
+          >
+            <TouchableOpacity onPress={() => onRefresh()} activeOpacity={0.5}>
               <Icon
-                name="search"
-                size={24}
-                color="black"
-                style={{ marginLeft: 5 }}
+                name="refresh"
+                size={34}
+                color="white"
+                style={{ marginLeft: 5, marginTop: 5 }}
               />
-            }
-          />
+            </TouchableOpacity>
+          </View>
         </View>
         <View
           style={{
-            width: "20%",
-            height: 50,
-            backgroundColor: "#272626",
+            height: 20,
+            backgroundColor: "#FACC2E",
+            alignItems: "center",
           }}
         >
-          <TouchableOpacity onPress={() => onRefresh()} activeOpacity={0.5}>
-            <Icon
-              name="refresh"
-              size={34}
-              color="white"
-              style={{ marginLeft: 5, marginTop: 5 }}
-            />
-          </TouchableOpacity>
+          <Text>
+            {userP}
+            {" - "}
+            {carrierUser}
+          </Text>
         </View>
+        <FlatList
+          keyExtractor={(item, index) => `${index}`}
+          data={data}
+          renderItem={({ item }) => (
+            <Order
+              item={item}
+              navigation={navigation}
+              user={userP}
+              carrierUser={carrierUser}
+              refresh={refresh}
+              setRefresh={setRefresh}
+            />
+          )}
+          ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+        {<Loading isVisible={isVisibleLoading} text="Cargando" />}
       </View>
-      <View
-        style={{
-          height: 20,
-          backgroundColor: "#FACC2E",
-          alignItems: "center",
-        }}
-      >
-        <Text>
-          {userP}
-          {" - "}
-          {carrierUser}
-        </Text>
-      </View>
-      <FlatList
-        keyExtractor={(item, index) => `${index}`}
-        data={data}
-        renderItem={({ item }) => (
-          <Order
-            item={item}
-            navigation={navigation}
-            user={userP}
-            carrierUser={carrierUser}
-            refresh={refresh}
-            setRefresh={setRefresh}
-          />
-        )}
-        ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      />
-      {<Loading isVisible={isVisibleLoading} text="Cargando" />}
-    </View>
+    </SafeAreaView>
   );
 }
 

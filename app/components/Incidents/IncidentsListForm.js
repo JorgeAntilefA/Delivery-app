@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   AsyncStorage,
+  SafeAreaView,
 } from "react-native";
 import Constants from "./../../utils/Constants";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -90,74 +91,59 @@ export default function IncidentsListForm(props) {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ width: "100%", height: 50, backgroundColor: "#272626" }}>
-          <Input
-            inputContainerStyle={styles.SectionStyle}
-            placeholder="Busqueda"
-            onChangeText={(text) => searchData(text)}
-            keyboardType="numeric"
-            //inputContainerStyle={{ width: "40%", backgroundColor: "red" }}
-            leftIcon={
-              <Icon
-                name="search"
-                size={24}
-                color="black"
-                style={{ marginLeft: 5 }}
-              />
-            }
-          />
+    <SafeAreaView style={styles.container}>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row" }}>
+          <View
+            style={{ width: "100%", height: 50, backgroundColor: "#272626" }}
+          >
+            <Input
+              inputContainerStyle={styles.SectionStyle}
+              placeholder="Busqueda"
+              onChangeText={(text) => searchData(text)}
+              keyboardType="numeric"
+              //inputContainerStyle={{ width: "40%", backgroundColor: "red" }}
+              leftIcon={
+                <Icon
+                  name="search"
+                  size={24}
+                  color="black"
+                  style={{ marginLeft: 5 }}
+                />
+              }
+            />
+          </View>
         </View>
-        {/* <View
+        <View
           style={{
-            width: "20%",
-            height: 50,
-            backgroundColor: "#272626",
+            height: 20,
+            backgroundColor: "#FACC2E",
+            alignItems: "center",
           }}
         >
-          <TouchableOpacity
-            onPress={() => console.log("wrw")}
-            activeOpacity={0.5}
-          >
-            <Icon
-              name="refresh"
-              size={34}
-              color="white"
-              style={{ marginLeft: 5, marginTop: 5 }}
+          <Text>
+            {userTitle}
+            {" - "}
+            {carrierTitle}
+          </Text>
+        </View>
+        <FlatList
+          keyExtractor={(item, index) => `${index}`}
+          data={data}
+          renderItem={({ item }) => (
+            <Order
+              item={item}
+              navigation={navigation}
+              user={userTitle}
+              carrierUser={carrierTitle}
             />
-          </TouchableOpacity>
-        </View> */}
+          )}
+          ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
+        />
+        <ManifestButton />
+        {<Loading isVisible={isVisibleLoading} text="Cargando" />}
       </View>
-      <View
-        style={{
-          height: 20,
-          backgroundColor: "#FACC2E",
-          alignItems: "center",
-        }}
-      >
-        <Text>
-          {userTitle}
-          {" - "}
-          {carrierTitle}
-        </Text>
-      </View>
-      <FlatList
-        keyExtractor={(item, index) => `${index}`}
-        data={data}
-        renderItem={({ item }) => (
-          <Order
-            item={item}
-            navigation={navigation}
-            user={userTitle}
-            carrierUser={carrierTitle}
-          />
-        )}
-        ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
-      />
-      <ManifestButton />
-      {<Loading isVisible={isVisibleLoading} text="Cargando" />}
-    </View>
+    </SafeAreaView>
   );
 
   function SeparatorManifest() {

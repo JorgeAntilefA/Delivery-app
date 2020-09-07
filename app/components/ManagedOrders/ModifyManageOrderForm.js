@@ -8,7 +8,9 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  SafeAreaView,
   AsyncStorage,
+  Platform,
 } from "react-native";
 import { Icon, ListItem, CheckBox } from "react-native-elements";
 import axios from "axios";
@@ -19,7 +21,7 @@ import { Input } from "@ui-kitten/components";
 import * as ImagePicker from "expo-image-picker";
 import * as Permissions from "expo-permissions";
 import { useIsFocused } from "@react-navigation/native";
-
+import RNPickerSelect from "react-native-picker-select";
 export default function ModifyManagedOrder(props) {
   const { navigation, route } = props;
 
@@ -87,8 +89,11 @@ export default function ModifyManagedOrder(props) {
         .then(
           axios.spread((...responses) => {
             const responseListState = responses[0];
-            setSelectedValueS(JSON.parse(responseListState.data.trim()));
-            //console.log(JSON.parse(responseListState.data.trim()));
+            if (Platform.OS === "ios") {
+              setSelectedValueS(responseListState.data);
+            } else {
+              setSelectedValueS(JSON.parse(responseListState.data.trim()));
+            }
           })
         )
         .catch((errors) => {
@@ -286,54 +291,56 @@ export default function ModifyManagedOrder(props) {
   ];
 
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <View
-          style={{
-            height: 20,
-            backgroundColor: "#FACC2E",
-            alignItems: "center",
-          }}
-        >
-          <Text>
-            {user}
-            {" - "}
-            {carrierUser}
-          </Text>
-        </View>
-        {listInfo.map((item, index) => (
-          <ListItem
-            key={index}
-            title={item.text}
-            leftIcon={{
-              name: item.iconName,
-              type: item.iconType,
-              color: "#00a680",
+    <SafeAreaView>
+      <ScrollView>
+        <View style={styles.container}>
+          <View
+            style={{
+              height: 20,
+              backgroundColor: "#FACC2E",
+              alignItems: "center",
             }}
-            containerStyle={styles.containerListItem}
+          >
+            <Text>
+              {user}
+              {" - "}
+              {carrierUser}
+            </Text>
+          </View>
+          {listInfo.map((item, index) => (
+            <ListItem
+              key={index}
+              title={item.text}
+              leftIcon={{
+                name: item.iconName,
+                type: item.iconType,
+                color: "#00a680",
+              }}
+              containerStyle={styles.containerListItem}
+            />
+          ))}
+          <Text style={styles.pedido}>Modificar Estado del Pedido</Text>
+          {Platform.OS === "ios" ? <RNPickerState /> : <PickerState />}
+          <Input
+            style={styles.inputTextArea}
+            placeholder="Observacion"
+            multiline={true}
+            numberOfLines={4}
+            placeholderColor="#c4c3cb"
+            value={observacion}
+            onChange={(e) => setObservacion(e.nativeEvent.text)}
           />
-        ))}
-        <Text style={styles.pedido}>Modificar Estado del Pedido</Text>
-        <PickerState />
-        <Input
-          style={styles.inputTextArea}
-          placeholder="Observacion"
-          multiline={true}
-          numberOfLines={4}
-          placeholderColor="#c4c3cb"
-          value={observacion}
-          onChange={(e) => setObservacion(e.nativeEvent.text)}
-        />
-        <EditOrder />
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={() => SaveOrder()}
-        >
-          <Text style={styles.buttonText}>Guardar</Text>
-        </TouchableOpacity>
-        {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
-      </View>
-    </ScrollView>
+          <EditOrder />
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={() => SaveOrder()}
+          >
+            <Text style={styles.buttonText}>Guardar</Text>
+          </TouchableOpacity>
+          {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 
   function Camera() {
@@ -392,6 +399,31 @@ export default function ModifyManagedOrder(props) {
             <Picker.Item label={item.estado} value={item.estado} key={key} />
           ))}
         </Picker>
+      </View>
+    );
+  }
+
+  function RNPickerState() {
+    let state = selectedValueS.map((item) => ({
+      label: item.estado,
+      value: item.estado,
+    }));
+    return (
+      <View style={styles.picker}>
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedStateFinal(value)}
+          //selectedValue={selectedValueIncidence}
+          placeholder={{
+            label: "Seleccione Estado...",
+            value: null,
+          }}
+          items={state}
+          value={
+            selectedValueStateFinal
+              ? selectedValueStateFinal
+              : selectedValueState
+          }
+        />
       </View>
     );
   }
@@ -487,9 +519,16 @@ export default function ModifyManagedOrder(props) {
       }
 
       if (credentialsUser !== null) {
-        const listData = JSON.parse(credentialsUser).filter(
-          (pedidoF) => pedidoF.pedido !== pedido
-        );
+        let listData = "";
+        if (Platform.OS === "ios") {
+          listData = JSON.parse(credentialsUser).filter(
+            (pedidoF) => pedidoF.pedido !== pedido
+          );
+        } else {
+          listData = JSON.parse(credentialsUser).filter(
+            (pedidoF) => pedidoF.pedido !== pedido
+          );
+        }
 
         let solicitud = 1;
         let tipo_solicitud = "";

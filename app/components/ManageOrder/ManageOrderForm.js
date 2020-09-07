@@ -10,6 +10,8 @@ import {
   ScrollView,
   Linking,
   Button,
+  Platform,
+  SafeAreaView,
 } from "react-native";
 import { Icon, ListItem } from "react-native-elements";
 import * as Permissions from "expo-permissions";
@@ -22,6 +24,7 @@ import Loading from "../Loading";
 import Toast from "react-native-easy-toast";
 import { Input } from "@ui-kitten/components";
 import { useIsFocused } from "@react-navigation/native";
+import RNPickerSelect from "react-native-picker-select";
 
 export default function ManageOrder(props) {
   const { navigation, route } = props;
@@ -68,25 +71,51 @@ export default function ManageOrder(props) {
     return axios.post(url, params);
   }
 
+  function getListState() {
+    const params = new URLSearchParams();
+    params.append("opcion", "getActivaEstados");
+    params.append("carrier", carrierUser);
+
+    return axios.post(url, params);
+  }
+
   useEffect(() => {
     const getManifests = async () => {
-      await axios
-        .all([getListIncidence()])
-        .then(
-          axios.spread((...responses) => {
-            // const responseListState = responses[0];
-            const responseListIncidence = responses[0];
-            // setSelectedValueS(JSON.parse(responseListState.data.trim()));
-            setSelectedValueI(JSON.parse(responseListIncidence.data.trim()));
-          })
-        )
-        .catch((errors) => {
-          console.log(errors);
-        });
+      if (Platform.OS === "ios") {
+        await axios
+          .all([getListIncidence(), getListState()])
+          .then(
+            axios.spread((...responses) => {
+              const responseListIncidence = responses[0];
+              const responseListState = responses[1];
 
-      const statesAPP = await AsyncStorage.getItem("@localStorage:states");
+              setSelectedValueI(responseListIncidence.data);
+              setSelectedValueS(responseListState.data);
+              console.log(responses[0]);
+            })
+          )
+          .catch((errors) => {
+            console.log(errors);
+          });
+      } else {
+        await axios
+          .all([getListIncidence()])
+          .then(
+            axios.spread((...responses) => {
+              const responseListIncidence = responses[0];
 
-      setSelectedValueS(JSON.parse(statesAPP));
+              // setSelectedValueS(JSON.parse(responseListState.data.trim()));
+              setSelectedValueI(JSON.parse(responseListIncidence.data.trim()));
+            })
+          )
+          .catch((errors) => {
+            console.log(errors);
+          });
+
+        const statesAPP = await AsyncStorage.getItem("@localStorage:states");
+
+        setSelectedValueS(JSON.parse(statesAPP));
+      }
     };
     getManifests();
   }, []);
@@ -167,91 +196,98 @@ export default function ManageOrder(props) {
     );
   };
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <View
-          style={{
-            height: 20,
-            backgroundColor: "#FACC2E",
-            alignItems: "center",
-          }}
-        >
-          <Text>
-            {user}
-            {" - "}
-            {carrierUser}
-          </Text>
-        </View>
-        {latitud ? (
-          <Map
-            latitud={latitud}
-            longitud={longitud}
-            direccion={direccion}
-            comuna={comuna}
-          />
-        ) : (
-          <View style={{ width: "100%" }}>
-            <OpenURLButton
-              url={encodeURI(
-                "https://www.google.cl/maps/place/" +
-                  direccion +
-                  "," +
-                  comuna +
-                  ", Chile"
-              )}
-            >
-              VER EN MAPA
-            </OpenURLButton>
-          </View>
-        )}
-        {listInfo.map((item, index) => (
-          <ListItem
-            key={index}
-            title={item.text}
-            leftIcon={{
-              name: item.iconName,
-              type: item.iconType,
-              color: "#00a680",
-              size: 20,
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.container}>
+          <View
+            style={{
+              height: 20,
+              backgroundColor: "#FACC2E",
+              alignItems: "center",
             }}
-            containerStyle={styles.containerListItem}
-          />
-        ))}
-        <Text style={styles.pedido}>Gestión del Pedido</Text>
-        <PickerState />
-        <PickerIncidences />
-        <Input
-          style={styles.inputTextArea}
-          placeholder="Observacion"
-          multiline={true}
-          numberOfLines={4}
-          placeholderColor="#c4c3cb"
-          value={observacion}
-          onChange={(e) => setObservacion(e.nativeEvent.text)}
-        />
-        <Customer />
-        <View style={styles.imageContainer}>
-          <Camera />
-          <Signature />
-        </View>
-        <View style={styles.imageContainer}>
-          <TouchableOpacity
-            style={styles.buttonContainer}
-            onPress={() => SaveOrder()}
-            activeOpacity={0.5}
           >
-            <Text style={styles.buttonText}>Guardar</Text>
-          </TouchableOpacity>
+            <Text>
+              {user}
+              {" - "}
+              {carrierUser}
+            </Text>
+          </View>
+          {latitud ? (
+            <Map
+              latitud={latitud}
+              longitud={longitud}
+              direccion={direccion}
+              comuna={comuna}
+            />
+          ) : (
+            <View style={{ width: "100%" }}>
+              <OpenURLButton
+                url={encodeURI(
+                  "https://www.google.cl/maps/place/" +
+                    direccion +
+                    "," +
+                    comuna +
+                    ", Chile"
+                )}
+              >
+                VER EN MAPA
+              </OpenURLButton>
+            </View>
+          )}
+          {listInfo.map((item, index) => (
+            <ListItem
+              key={index}
+              title={item.text}
+              leftIcon={{
+                name: item.iconName,
+                type: item.iconType,
+                color: "#00a680",
+                size: 20,
+              }}
+              containerStyle={styles.containerListItem}
+            />
+          ))}
+          <Text style={styles.pedido}>Gestión del Pedido</Text>
+          {Platform.OS === "ios" ? <RNPickerState /> : <PickerState />}
+          {Platform.OS === "ios" ? (
+            <RNPickerIncidences />
+          ) : (
+            <PickerIncidences />
+          )}
+
+          <Input
+            style={styles.inputTextArea}
+            placeholder="Observacion"
+            multiline={true}
+            numberOfLines={4}
+            placeholderColor="#c4c3cb"
+            value={observacion}
+            onChange={(e) => setObservacion(e.nativeEvent.text)}
+          />
+          <Customer />
+          <View style={styles.imageContainer}>
+            <Camera />
+            <Signature />
+          </View>
+          <View style={styles.imageContainer}>
+            <TouchableOpacity
+              style={styles.buttonContainer}
+              onPress={() => SaveOrder()}
+              activeOpacity={0.5}
+            >
+              <Text style={styles.buttonText}>Guardar</Text>
+            </TouchableOpacity>
+          </View>
+          <Toast
+            style={styles.toast}
+            ref={toastRef}
+            position="center"
+            opacity={0.5}
+          />
         </View>
-        <Toast
-          style={styles.toast}
-          ref={toastRef}
-          position="center"
-          opacity={0.5}
-        />
-      </View>
-      {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
-    </ScrollView>
+        {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
+      </ScrollView>
+    </SafeAreaView>
   );
 
   function PickerState() {
@@ -270,6 +306,27 @@ export default function ManageOrder(props) {
     );
   }
 
+  function RNPickerState() {
+    let state = selectedValueS.map((item) => ({
+      label: item.estado,
+      value: item.estado,
+    }));
+    return (
+      <View style={styles.picker}>
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedState(value)}
+          //selectedValue={selectedValueIncidence}
+          placeholder={{
+            label: "Seleccione Estado...",
+            value: null,
+          }}
+          selectedValue={selectedValueState}
+          items={state}
+        />
+      </View>
+    );
+  }
+
   function PickerIncidences() {
     return (
       <View style={styles.picker}>
@@ -283,6 +340,28 @@ export default function ManageOrder(props) {
             <Picker.Item label={item.tipo} value={item.tipo} key={key} />
           ))}
         </Picker>
+      </View>
+    );
+  }
+
+  function RNPickerIncidences() {
+    let incidences = selectedValueI.map((item) => ({
+      label: item.tipo,
+      value: item.tipo,
+    }));
+
+    console.log(incidences);
+    return (
+      <View style={styles.picker}>
+        <RNPickerSelect
+          onValueChange={(value) => select(value)}
+          placeholder={{
+            label: "Seleccione Solicitud...",
+            value: null,
+          }}
+          selectedValue={selectedValueIncidence}
+          items={incidences}
+        />
       </View>
     );
   }

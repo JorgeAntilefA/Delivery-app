@@ -8,10 +8,13 @@ import {
   TouchableWithoutFeedback,
   Image,
   AsyncStorage,
+  SafeAreaView,
 } from "react-native";
 import Constants from "./../../utils/Constants";
-import { Input, Icon } from "@ui-kitten/components";
+import Icon from "react-native-vector-icons/FontAwesome";
+import { Input } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
+//import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ManagedOrdersForm(props) {
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
@@ -78,44 +81,67 @@ export default function ManagedOrdersForm(props) {
     </TouchableWithoutFeedback>
   );
   return (
-    <View style={{ flex: 1 }}>
-      <View style={styles.containerInput}>
-        <Input
-          style={styles.inputForm}
-          onChangeText={(text) => searchData(text)}
-          keyboardType="numeric"
-          //value={(text) => setText(text)}
-          accessoryLeft={renderIcon}
-          placeholder="Busqueda"
+    <SafeAreaView style={styles.container}>
+      <View style={{ flex: 1 }}>
+        {/* <View style={styles.containerInput}>
+          <Input
+            style={styles.inputForm}
+            onChangeText={(text) => searchData(text)}
+            keyboardType="numeric"
+            //value={(text) => setText(text)}
+            accessoryLeft={renderIcon}
+            placeholder="Busqueda"
+          />
+        </View> */}
+        <View style={{ flexDirection: "row" }}>
+          <View
+            style={{ width: "100%", height: 50, backgroundColor: "#272626" }}
+          >
+            <Input
+              inputContainerStyle={styles.SectionStyle}
+              placeholder="Busqueda"
+              onChangeText={(text) => searchData(text)}
+              keyboardType="numeric"
+              //inputContainerStyle={{ width: "40%", backgroundColor: "red" }}
+              leftIcon={
+                <Icon
+                  name="search"
+                  size={24}
+                  color="black"
+                  style={{ marginLeft: 5 }}
+                />
+              }
+            />
+          </View>
+        </View>
+        <View
+          style={{
+            height: 20,
+            backgroundColor: "#FACC2E",
+            alignItems: "center",
+          }}
+        >
+          <Text>
+            {userTitle}
+            {" - "}
+            {carrierTitle}
+          </Text>
+        </View>
+        <FlatList
+          keyExtractor={(item, index) => `${index}`}
+          data={data}
+          renderItem={({ item }) => (
+            <Order
+              item={item}
+              navigation={navigation}
+              user={userTitle}
+              carrierUser={carrierTitle}
+            />
+          )}
+          ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
         />
       </View>
-      <View
-        style={{
-          height: 20,
-          backgroundColor: "#FACC2E",
-          alignItems: "center",
-        }}
-      >
-        <Text>
-          {userTitle}
-          {" - "}
-          {carrierTitle}
-        </Text>
-      </View>
-      <FlatList
-        keyExtractor={(item, index) => `${index}`}
-        data={data}
-        renderItem={({ item }) => (
-          <Order
-            item={item}
-            navigation={navigation}
-            user={userTitle}
-            carrierUser={carrierTitle}
-          />
-        )}
-        ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
-      />
-    </View>
+    </SafeAreaView>
   );
 }
 function SeparatorManifest() {
@@ -289,5 +315,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#fff",
+  },
+  SectionStyle: {
+    backgroundColor: "#fff",
+    borderWidth: 0.5,
+    borderColor: "#000",
+    marginTop: 5,
+    height: 35,
+    width: "90%",
+    borderRadius: 5,
   },
 });

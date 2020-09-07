@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   AsyncStorage,
   Image,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import { ListItem, Button, Icon } from "react-native-elements";
 import axios from "axios";
@@ -17,6 +19,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import * as Permissions from "expo-permissions";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import RNPickerSelect from "react-native-picker-select";
 
 export default function ResponseIncidentsForm(props) {
   const { navigation, route } = props;
@@ -63,7 +66,11 @@ export default function ResponseIncidentsForm(props) {
       await axios
         .post(url, params)
         .then((response) => {
-          setSelectedValueS(JSON.parse(response.data.trim()));
+          if (Platform.OS === "ios") {
+            setSelectedValueS(responseListState.data);
+          } else {
+            setSelectedValueS(JSON.parse(responseListState.data.trim()));
+          }
 
           setIsvisibleLoading(false);
         })
@@ -141,64 +148,67 @@ export default function ResponseIncidentsForm(props) {
   };
 
   return (
-    <ScrollView>
-      <View>
-        <View
-          style={{
-            height: 20,
-            backgroundColor: "#FACC2E",
-            alignItems: "center",
-          }}
-        >
-          <Text>
-            {user}
-            {" - "}
-            {carrierUser}
-          </Text>
-        </View>
-        {listInfo.map((item, index) => (
-          <ListItem
-            key={index}
-            title={item.text}
-            leftIcon={{
-              name: item.iconName,
-              type: item.iconType,
-              color: "#00a680",
-              size: 20,
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View>
+          <View
+            style={{
+              height: 20,
+              backgroundColor: "#FACC2E",
+              alignItems: "center",
             }}
-            containerStyle={styles.containerListItem}
+          >
+            <Text>
+              {user}
+              {" - "}
+              {carrierUser}
+            </Text>
+          </View>
+          {listInfo.map((item, index) => (
+            <ListItem
+              key={index}
+              title={item.text}
+              leftIcon={{
+                name: item.iconName,
+                type: item.iconType,
+                color: "#00a680",
+                size: 20,
+              }}
+              containerStyle={styles.containerListItem}
+            />
+          ))}
+          <View style={styles.imageContainer}></View>
+          <OptionsIncidents />
+          <Customer />
+          <View style={styles.imageContainer}>
+            <Camera />
+            <Signature />
+          </View>
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={() => SaveOrder()}
+            activeOpacity={0.5}
+          >
+            <Text style={styles.buttonText}>Guardar</Text>
+          </TouchableOpacity>
+          <Toast
+            style={styles.toast}
+            ref={toastRef}
+            position="center"
+            opacity={0.5}
           />
-        ))}
-        <View style={styles.imageContainer}></View>
-        <OptionsIncidents />
-        <Customer />
-        <View style={styles.imageContainer}>
-          <Camera />
-          <Signature />
+          {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
         </View>
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={() => SaveOrder()}
-          activeOpacity={0.5}
-        >
-          <Text style={styles.buttonText}>Guardar</Text>
-        </TouchableOpacity>
-        <Toast
-          style={styles.toast}
-          ref={toastRef}
-          position="center"
-          opacity={0.5}
-        />
-        {<Loading isVisible={isVisibleLoading} text="Guardando.." />}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 
   function OptionsIncidents() {
     // if (tipo_solicitud == "FALTANTE MANIFIESTO") {
     return (
       <View>
-        <PickerState />
+        {/* <PickerState /> */}
+        {Platform.OS === "ios" ? <RNPickerState /> : <PickerState />}
         <View style={styles.containerFaltantes}>
           {visto == "1" ? (
             <Button
@@ -232,6 +242,26 @@ export default function ResponseIncidentsForm(props) {
             <Picker.Item label={item.estado} value={item.estado} key={key} />
           ))}
         </Picker>
+      </View>
+    );
+  }
+
+  function RNPickerState() {
+    let state = selectedValueS.map((item) => ({
+      label: item.estado,
+      value: item.estado,
+    }));
+    return (
+      <View style={styles.picker}>
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedStateFinal(value)}
+          //selectedValue={selectedValueIncidence}
+          placeholder={{
+            label: "Seleccione Estado...",
+            value: null,
+          }}
+          items={state}
+        />
       </View>
     );
   }

@@ -7,12 +7,15 @@ import {
   ScrollView,
   Picker,
   AsyncStorage,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import { Input } from "@ui-kitten/components";
 import Constants from "./../../utils/Constants";
 import axios from "axios";
 import { useIsFocused, StackActions } from "@react-navigation/native";
 import Toast from "react-native-easy-toast";
+import RNPickerSelect from "react-native-picker-select";
 import Loading from "../Loading";
 
 export default function IncidentsForm(props) {
@@ -68,12 +71,16 @@ export default function IncidentsForm(props) {
     getRememberedTitle();
     const getAxios = async () => {
       await axios
-        .all([getListCarrier(), getListIncidence()])
+        .all([getListCarrier()])
         .then(
           axios.spread((...responses) => {
             const responseListCarrier = responses[0];
-            const responseListIncidence = responses[1];
-            setSelectedValueC(JSON.parse(responseListCarrier.data.trim()));
+            //const responseListIncidence = responses[1];
+            if (Platform.OS === "ios") {
+              setSelectedValueC(responseListCarrier.data);
+            } else {
+              setSelectedValueC(JSON.parse(responseListCarrier.data.trim()));
+            }
           })
         )
         .catch((errors) => {
@@ -96,106 +103,109 @@ export default function IncidentsForm(props) {
   };
 
   return (
-    <ScrollView>
-      <View
-        style={{
-          height: 40,
-          backgroundColor: "#151515",
-        }}
-      >
-        <Text style={styles.titleScreen}>Solicitudes</Text>
-      </View>
-      <View
-        style={{
-          height: 20,
-          backgroundColor: "#FACC2E",
-          alignItems: "center",
-        }}
-      >
-        <Text>
-          {userTitle}
-          {" - "}
-          {carrierTitle}
-        </Text>
-      </View>
-      <View>
-        <Text style={styles.text}>Solicitud</Text>
-        <Input
-          style={styles.inputForm}
-          placeholderColor="#c4c3cb"
-          status="danger"
-          value={solicitud}
-          //   disabled={true}
-          editable={false}
-          //   onChange={(e) => setSelectedIncidence(e.nativeEvent.text)}
-        />
-        {/* <PickerIncidences /> */}
-        <Text style={styles.text}>Pedido</Text>
-        <Input
-          style={styles.inputForm}
-          placeholder="Pedido"
-          keyboardType="numeric"
-          placeholderColor="#c4c3cb"
-          value={pedido}
-          onChange={(e) => setPedido(e.nativeEvent.text)}
-        />
-        <Text style={styles.text}>Manifiesto</Text>
-        <Input
-          style={styles.inputForm}
-          placeholder="Manifiesto"
-          keyboardType="numeric"
-          placeholderColor="#c4c3cb"
-          value={manifiesto}
-          onChange={(e) => setManifiesto(e.nativeEvent.text)}
-        />
-        <Text style={styles.text}>Transporte</Text>
-        <PickerCarrier />
-        <Text style={styles.text}>N° Envio</Text>
-        {solicitud == "Devolver OP" ? (
-          <Input
-            style={styles.inputForm}
-            placeholder="N° Envio"
-            keyboardType="numeric"
-            placeholderColor="#c4c3cb"
-            value={tracking}
-            onChange={(e) => setTracking(e.nativeEvent.text)}
-          />
-        ) : (
-          <Input
-            style={styles.inputForm}
-            placeholder="N° Envio"
-            keyboardType="numeric"
-            placeholderColor="#c4c3cb"
-            disabled={true}
-            //value={tracking}
-          />
-        )}
-        <Text style={styles.text}>Observacion</Text>
-        <Input
-          style={styles.inputTextArea}
-          placeholder="Observacion"
-          multiline={true}
-          numberOfLines={4}
-          placeholderColor="#c4c3cb"
-          value={observacion}
-          onChange={(e) => setObservacion(e.nativeEvent.text)}
-        />
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={() => SaveIncidence()}
-          activeOpacity={0.5}
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View
+          style={{
+            height: 40,
+            backgroundColor: "#151515",
+          }}
         >
-          <Text style={styles.buttonText}>Guardar</Text>
-        </TouchableOpacity>
-        <Toast
-          style={styles.toast}
-          ref={toastRef}
-          position="center"
-          opacity={0.5}
-        />
-      </View>
-      {/* {<Loading isVisible={isVisibleLoading} text="Guardando.." />} */}
-    </ScrollView>
+          <Text style={styles.titleScreen}>Solicitudes</Text>
+        </View>
+        <View
+          style={{
+            height: 20,
+            backgroundColor: "#FACC2E",
+            alignItems: "center",
+          }}
+        >
+          <Text>
+            {userTitle}
+            {" - "}
+            {carrierTitle}
+          </Text>
+        </View>
+        <View>
+          <Text style={styles.text}>Solicitud</Text>
+          <Input
+            style={styles.inputForm}
+            placeholderColor="#c4c3cb"
+            status="danger"
+            value={solicitud}
+            //   disabled={true}
+            editable={false}
+            //   onChange={(e) => setSelectedIncidence(e.nativeEvent.text)}
+          />
+          {/* <PickerIncidences /> */}
+          <Text style={styles.text}>Pedido</Text>
+          <Input
+            style={styles.inputForm}
+            placeholder="Pedido"
+            keyboardType="numeric"
+            placeholderColor="#c4c3cb"
+            value={pedido}
+            onChange={(e) => setPedido(e.nativeEvent.text)}
+          />
+          <Text style={styles.text}>Manifiesto</Text>
+          <Input
+            style={styles.inputForm}
+            placeholder="Manifiesto"
+            keyboardType="numeric"
+            placeholderColor="#c4c3cb"
+            value={manifiesto}
+            onChange={(e) => setManifiesto(e.nativeEvent.text)}
+          />
+          <Text style={styles.text}>Transporte</Text>
+          {/* <PickerCarrier /> */}
+          {Platform.OS === "ios" ? <RNPickerCarrier /> : <PickerCarrier />}
+          <Text style={styles.text}>N° Envio</Text>
+          {solicitud == "Devolver OP" ? (
+            <Input
+              style={styles.inputForm}
+              placeholder="N° Envio"
+              keyboardType="numeric"
+              placeholderColor="#c4c3cb"
+              value={tracking}
+              onChange={(e) => setTracking(e.nativeEvent.text)}
+            />
+          ) : (
+            <Input
+              style={styles.inputForm}
+              placeholder="N° Envio"
+              keyboardType="numeric"
+              placeholderColor="#c4c3cb"
+              disabled={true}
+              //value={tracking}
+            />
+          )}
+          <Text style={styles.text}>Observacion</Text>
+          <Input
+            style={styles.inputTextArea}
+            placeholder="Observacion"
+            multiline={true}
+            numberOfLines={4}
+            placeholderColor="#c4c3cb"
+            value={observacion}
+            onChange={(e) => setObservacion(e.nativeEvent.text)}
+          />
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={() => SaveIncidence()}
+            activeOpacity={0.5}
+          >
+            <Text style={styles.buttonText}>Guardar</Text>
+          </TouchableOpacity>
+          <Toast
+            style={styles.toast}
+            ref={toastRef}
+            position="center"
+            opacity={0.5}
+          />
+        </View>
+        {/* {<Loading isVisible={isVisibleLoading} text="Guardando.." />} */}
+      </ScrollView>
+    </SafeAreaView>
   );
 
   function PickerCarrier() {
@@ -218,6 +228,32 @@ export default function IncidentsForm(props) {
             <Picker.Item label={item.carrier} value={item.carrier} key={key} />
           ))}
         </Picker>
+      </View>
+    );
+  }
+
+  function RNPickerCarrier() {
+    let carrier = selectedValueC.map((item) => ({
+      label: item.carrier,
+      value: item.carrier,
+    }));
+
+    solicitud == "Devolver OP"
+      ? setDisableBotton(true)
+      : setDisableBotton(false);
+    return (
+      <View style={styles.picker}>
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedCarrier(value)}
+          //selectedValue={selectedValueIncidence}
+          placeholder={{
+            label: "Seleccione Estado...",
+            value: null,
+          }}
+          selectedValue={selectedValueCarrier}
+          items={carrier}
+          enabled={disableBotton}
+        />
       </View>
     );
   }
@@ -338,7 +374,7 @@ export default function IncidentsForm(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "rgb(32,53,70)",
+
     flexDirection: "column",
   },
   titleScreen: {

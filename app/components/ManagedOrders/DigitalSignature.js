@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, View, Platform } from "react-native";
 import Signature from "react-native-signature-canvas";
 import { Input } from "@ui-kitten/components";
 import Toast from "react-native-easy-toast";
@@ -79,6 +79,11 @@ export default function SignatureScreen(props) {
     }`;
   return (
     <View style={{ flex: 1 }}>
+      {Platform.OS === "ios" ? (
+        <View style={{ height: 20 }}></View>
+      ) : (
+        <View></View>
+      )}
       <Input
         style={styles.inputName}
         placeholder="Nombre"

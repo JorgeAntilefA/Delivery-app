@@ -1,8 +1,8 @@
 Arguments: 
-  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js add countrycountries-list
+  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js add @types/react-native-ios-picker
 
 PATH: 
-  C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Microsoft SQL Server\100\Tools\Binn\;C:\Program Files\Microsoft SQL Server\100\Tools\Binn\;C:\Program Files\Microsoft SQL Server\100\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\100\Tools\Binn\VSShell\Common7\IDE\;C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\PrivateAssemblies\;C:\Program Files (x86)\Microsoft SQL Server\100\DTS\Binn\;C:\Program Files\Git\cmd;%USERPROFILE%\.dnx\bin;C:\Program Files\Microsoft DNX\Dnvm\;C:\Program Files\Microsoft SQL Server\120\Tools\Binn\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files (x86)\Microsoft SQL Server\110\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\120\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files (x86)\Yarn\bin\;C:\Program Files\nodejs\;C:\Program Files\dotnet\;C:\Users\jorge.antilef\AppData\Local\Microsoft\WindowsApps;C:\Users\jorge.antilef\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\jorge.antilef\AppData\Local\Yarn\bin;C:\Users\jorge.antilef\AppData\Roaming\npm
+  C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Microsoft SQL Server\100\Tools\Binn\;C:\Program Files\Microsoft SQL Server\100\Tools\Binn\;C:\Program Files\Microsoft SQL Server\100\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\100\Tools\Binn\VSShell\Common7\IDE\;C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\PrivateAssemblies\;C:\Program Files (x86)\Microsoft SQL Server\100\DTS\Binn\;C:\Program Files\Git\cmd;C:\Windows\system32\config\systemprofile\.dnx\bin;C:\Program Files\Microsoft DNX\Dnvm\;C:\Program Files\Microsoft SQL Server\120\Tools\Binn\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files (x86)\Microsoft SQL Server\110\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\120\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files (x86)\Yarn\bin\;C:\Program Files\nodejs\;C:\Program Files\dotnet\;C:\Users\jorge.antilef\AppData\Local\Microsoft\WindowsApps;;C:\Users\jorge.antilef\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\jorge.antilef\AppData\Local\Yarn\bin;C:\Users\jorge.antilef\AppData\Roaming\npm
 
 Yarn version: 
   1.22.0
@@ -14,7 +14,7 @@ Platform:
   win32 x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/countrycountries-list: Not found
+  Error: https://registry.yarnpkg.com/@types%2freact-native-ios-picker: Not found
       at Request.params.callback [as _callback] (C:\Program Files (x86)\Yarn\lib\cli.js:66084:18)
       at Request.self.callback (C:\Program Files (x86)\Yarn\lib\cli.js:140727:22)
       at Request.emit (events.js:311:20)
@@ -46,6 +46,7 @@ npm manifest:
       "@ui-kitten/eva-icons": "^5.0.0",
       "axios": "^0.19.2",
       "base-64": "^0.1.0",
+      "countries-list": "^2.5.4",
       "expo": "~37.0.3",
       "expo-image-picker": "~8.1.0",
       "expo-location": "~8.1.0",
@@ -57,16 +58,19 @@ npm manifest:
       "react-native-base64": "^0.0.2",
       "react-native-easy-toast": "^1.2.0",
       "react-native-elements": "^2.0.0",
+      "react-native-flatlist-multiple-choose": "^1.1.0",
       "react-native-gesture-handler": "~1.6.0",
+      "react-native-ios-picker": "^1.0.0",
       "react-native-maps": "^0.27.1",
       "react-native-maps-directions": "^1.8.0",
+      "react-native-multiple-select-list": "^1.0.4",
       "react-native-open-maps": "^0.3.5",
       "react-native-paper": "^3.10.1",
       "react-native-reanimated": "~1.7.0",
       "react-native-safe-area-context": "0.7.3",
       "react-native-screens": "~2.2.0",
       "react-native-signature-canvas": "^2.4.0",
-      "react-native-svg": "11.0.1",
+      "react-native-svg": "^12.1.0",
       "react-native-web": "~0.11.7",
       "utf8": "^3.0.0"
     },
@@ -1913,6 +1917,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/callsites/-/callsites-3.1.0.tgz#b3630abd8943432f54b3f0519238e33cd7df2f73"
     integrity sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==
   
+  camelcase@^3.0.0:
+    version "3.0.0"
+    resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-3.0.0.tgz#32fc4b9fcdaf845fcdf7e73bb97cac2261f0ab0a"
+    integrity sha1-MvxLn82vhF/N9+c7uXysImHwqwo=
+  
   camelcase@^4.1.0:
     version "4.1.0"
     resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-4.1.0.tgz#d545635be1e33c542649c69173e5de6acfae34dd"
@@ -2201,6 +2210,11 @@ Lockfile:
       is-directory "^0.3.1"
       js-yaml "^3.13.1"
       parse-json "^4.0.0"
+  
+  countries-list@^2.5.4:
+    version "2.5.4"
+    resolved "https://registry.yarnpkg.com/countries-list/-/countries-list-2.5.4.tgz#c1a0ab8f63c0972b266254d63e595ea86a6cfe1e"
+    integrity sha512-6+AIKth3MCOEWTLOVTgR7zTe6oH3JlL0MworsJwIyG0jQi+cKeChOEPvcKszNtGAuCp7p+OrqdxPWxjhu8LqoA==
   
   create-react-class@^15.6.2, create-react-class@^15.6.3:
     version "15.6.3"
@@ -2865,6 +2879,14 @@ Lockfile:
       make-dir "^2.0.0"
       pkg-dir "^3.0.0"
   
+  find-up@^1.0.0:
+    version "1.1.2"
+    resolved "https://registry.yarnpkg.com/find-up/-/find-up-1.1.2.tgz#6b2e9822b1a2ce0a60ab64d610eccad53cb24d0f"
+    integrity sha1-ay6YIrGizgpgq2TWEOzK1TyyTQ8=
+    dependencies:
+      path-exists "^2.0.0"
+      pinkie-promise "^2.0.0"
+  
   find-up@^2.0.0, find-up@^2.1.0:
     version "2.1.0"
     resolved "https://registry.yarnpkg.com/find-up/-/find-up-2.1.0.tgz#45d1b7e506c717ddd482775a2b77920a3c0c57a7"
@@ -3303,6 +3325,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/is-stream/-/is-stream-1.1.0.tgz#12d4a3dd4e68e0b79ceb8dbc84173ae80d91ca44"
     integrity sha1-EtSj3U5o4Lec6428hBc66A2RykQ=
   
+  is-utf8@^0.2.0:
+    version "0.2.1"
+    resolved "https://registry.yarnpkg.com/is-utf8/-/is-utf8-0.2.1.tgz#4b0da1442104d1b336340e80797e865cf39f7d72"
+    integrity sha1-Sw2hRCEE0bM2NA6AeX6GXPOffXI=
+  
   is-windows@^1.0.2:
     version "1.0.2"
     resolved "https://registry.yarnpkg.com/is-windows/-/is-windows-1.0.2.tgz#d1850eb9791ecd18e6182ce12a30f396634bb19d"
@@ -3569,6 +3596,17 @@ Lockfile:
     dependencies:
       leven "^3.1.0"
   
+  load-json-file@^1.0.0:
+    version "1.1.0"
+    resolved "https://registry.yarnpkg.com/load-json-file/-/load-json-file-1.1.0.tgz#956905708d58b4bab4c2261b04f59f31c99374c0"
+    integrity sha1-lWkFcI1YtLq0wiYbBPWfMcmTdMA=
+    dependencies:
+      graceful-fs "^4.1.2"
+      parse-json "^2.2.0"
+      pify "^2.0.0"
+      pinkie-promise "^2.0.0"
+      strip-bom "^2.0.0"
+  
   load-json-file@^2.0.0:
     version "2.0.0"
     resolved "https://registry.yarnpkg.com/load-json-file/-/load-json-file-2.0.0.tgz#7947e42149af80d696cbf797bcaabcfe1fe29ca8"
@@ -3622,7 +3660,7 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/lodash.throttle/-/lodash.throttle-4.1.1.tgz#c23e91b710242ac70c37f1e1cda9274cc39bf2f4"
     integrity sha1-wj6RtxAkKscMN/HhzaknTMOb8vQ=
   
-  lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.4, lodash@^4.17.5, lodash@^4.3.0, lodash@^4.5.0, lodash@^4.6.0:
+  lodash@^4.0.0, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.4, lodash@^4.17.5, lodash@^4.3.0, lodash@^4.5.0, lodash@^4.6.0:
     version "4.17.15"
     resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
     integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
@@ -4310,6 +4348,13 @@ Lockfile:
       strip-ansi "^5.2.0"
       wcwidth "^1.0.1"
   
+  os-locale@^1.4.0:
+    version "1.4.0"
+    resolved "https://registry.yarnpkg.com/os-locale/-/os-locale-1.4.0.tgz#20f9f17ae29ed345e8bde583b13d2009803c14d9"
+    integrity sha1-IPnxeuKe00XoveWDsT0gCYA8FNk=
+    dependencies:
+      lcid "^1.0.0"
+  
   os-locale@^2.0.0:
     version "2.1.0"
     resolved "https://registry.yarnpkg.com/os-locale/-/os-locale-2.1.0.tgz#42bc2900a6b5b8bd17376c8e882b65afccf24bf2"
@@ -4428,6 +4473,13 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/path-browserify/-/path-browserify-1.0.1.tgz#d98454a9c3753d5790860f16f68867b9e46be1fd"
     integrity sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==
   
+  path-exists@^2.0.0:
+    version "2.1.0"
+    resolved "https://registry.yarnpkg.com/path-exists/-/path-exists-2.1.0.tgz#0feb6c64f0fc518d9a754dd5efb62c7022761f4b"
+    integrity sha1-D+tsZPD8UY2adU3V77YscCJ2H0s=
+    dependencies:
+      pinkie-promise "^2.0.0"
+  
   path-exists@^3.0.0:
     version "3.0.0"
     resolved "https://registry.yarnpkg.com/path-exists/-/path-exists-3.0.0.tgz#ce0ebeaa5f78cb18925ea7d810d7b59b010fd515"
@@ -4453,6 +4505,15 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.6.tgz#d62dbb5679405d72c4737ec58600e9ddcf06d24c"
     integrity sha512-GSmOT2EbHrINBf9SR7CDELwlJ8AENk3Qn7OikK4nFYAu3Ote2+JYNVvkpAEQm3/TLNEJFD/xZJjzyxg3KBWOzw==
   
+  path-type@^1.0.0:
+    version "1.1.0"
+    resolved "https://registry.yarnpkg.com/path-type/-/path-type-1.1.0.tgz#59c44f7ee491da704da415da5a4070ba4f8fe441"
+    integrity sha1-WcRPfuSR2nBNpBXaWkBwuk+P5EE=
+    dependencies:
+      graceful-fs "^4.1.2"
+      pify "^2.0.0"
+      pinkie-promise "^2.0.0"
+  
   path-type@^2.0.0:
     version "2.0.0"
     resolved "https://registry.yarnpkg.com/path-type/-/path-type-2.0.0.tgz#f012ccb8415b7096fc2daa1054c3d72389594c73"
@@ -4469,6 +4530,18 @@ Lockfile:
     version "4.0.1"
     resolved "https://registry.yarnpkg.com/pify/-/pify-4.0.1.tgz#4b2cd25c50d598735c50292224fd8c6df41e3231"
     integrity sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==
+  
+  pinkie-promise@^2.0.0:
+    version "2.0.1"
+    resolved "https://registry.yarnpkg.com/pinkie-promise/-/pinkie-promise-2.0.1.tgz#2135d6dfa7a358c069ac9b178776288228450ffa"
+    integrity sha1-ITXW36ejWMBprJsXh3YogihFD/o=
+    dependencies:
+      pinkie "^2.0.0"
+  
+  pinkie@^2.0.0:
+    version "2.0.4"
+    resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
+    integrity sha1-clVrgM+g1IqXToDnckjoDtT3+HA=
   
   pirates@^4.0.0:
     version "4.0.1"
@@ -4654,6 +4727,13 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/react-native-base64/-/react-native-base64-0.0.2.tgz#c28463c2c6779ac3ec5fdd12979ebc8c5f9b410a"
     integrity sha512-Fu/J1a2y0X22EJDWqJR2oEa1fpP4gTFjYxk8ElJdt1Yak3HOXmFJ7EohLVHU2DaQkgmKfw8qb7u/48gpzveRbg==
   
+  react-native-collapse-view@1.0.0:
+    version "1.0.0"
+    resolved "https://registry.yarnpkg.com/react-native-collapse-view/-/react-native-collapse-view-1.0.0.tgz#6f730aceb2ecfeecc6ff8b265ba05c4aee63a2ef"
+    integrity sha1-b3MKzrLs/uzG/4smW6BcSu5jou8=
+    dependencies:
+      prop-types "^15.5.10"
+  
   react-native-easy-toast@^1.2.0:
     version "1.2.0"
     resolved "https://registry.yarnpkg.com/react-native-easy-toast/-/react-native-easy-toast-1.2.0.tgz#0f70bcb99e3306cda4800c244bfb4a67d42276ed"
@@ -4680,6 +4760,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/react-native-eva-icons/-/react-native-eva-icons-1.3.1.tgz#1e6e019b0fd3cb1669db50bd6bbdaa6d89327593"
     integrity sha512-emd/aYXuOacuDVTx0SJoLi+xsOdCNdljQB3PTNCM9AQ3m/smG0X1TN0+ihelPO7MqoHzaH0h6lbANtwxGUy8Fw==
   
+  react-native-flatlist-multiple-choose@^1.1.0:
+    version "1.1.0"
+    resolved "https://registry.yarnpkg.com/react-native-flatlist-multiple-choose/-/react-native-flatlist-multiple-choose-1.1.0.tgz#37844241926940171a1956a1326b2cb56018e5ed"
+    integrity sha512-2Vyfqp+m5MTeCsRcah0c7WdMU9Ab3M32yM/UMD7G9y8ZF1No+0t+MYiugATftZ52t9CeDx0PUbbAyt05HGmKkA==
+  
   react-native-gesture-handler@~1.6.0:
     version "1.6.1"
     resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-1.6.1.tgz#678e2dce250ed66e93af409759be22cd6375dd17"
@@ -4689,6 +4774,13 @@ Lockfile:
       hoist-non-react-statics "^2.3.1"
       invariant "^2.2.4"
       prop-types "^15.7.2"
+  
+  react-native-ios-picker@^1.0.0:
+    version "1.0.0"
+    resolved "https://registry.yarnpkg.com/react-native-ios-picker/-/react-native-ios-picker-1.0.0.tgz#a2cdf43871b4c932dda9758a50d2c2c4dad02c86"
+    integrity sha512-/QDeij2wxGWwPD9EaFqHXdfB7zQsxHpknBqH5Mxmnetj3zQPZ4OzQf2k+WM+9MYXZUyIsMKGb2NBvHP5MIkLOA==
+    dependencies:
+      react-native-collapse-view "1.0.0"
   
   react-native-iphone-x-helper@^1.2.1:
     version "1.2.1"
@@ -4707,6 +4799,13 @@ Lockfile:
     version "0.27.1"
     resolved "https://registry.yarnpkg.com/react-native-maps/-/react-native-maps-0.27.1.tgz#2f10cd417bb2fd938c9e015b1c9b6d9b1a44b97f"
     integrity sha512-HygBkZBecTnIVRYrSiLRAvu4OmXOYso/A7c6Cy73HkOh9CgGV8Ap5eBea24tvmFGptjj5Hg8AJ94/YbmWK1Okw==
+  
+  react-native-multiple-select-list@^1.0.4:
+    version "1.0.4"
+    resolved "https://registry.yarnpkg.com/react-native-multiple-select-list/-/react-native-multiple-select-list-1.0.4.tgz#59cdf6ea897b5ee47c7edbf313ea844bcde4abbe"
+    integrity sha1-Wc326ol7XuR8ftvzE+qES83kq74=
+    dependencies:
+      react-native-vector-icons "^3.0.0"
   
   react-native-open-maps@^0.3.5:
     version "0.3.5"
@@ -4770,13 +4869,21 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/react-native-status-bar-height/-/react-native-status-bar-height-2.5.0.tgz#bc0fb85230603850aab9667ee8111a62954de90c"
     integrity sha512-sYBCPYA/NapBSHkdm/IVL4ID3LLlIuLqINi2FBDyMkc2BU9pfSGOtkz9yfxoK39mYJuTrlTOQ7mManARUsYDSA==
   
-  react-native-svg@11.0.1:
-    version "11.0.1"
-    resolved "https://registry.yarnpkg.com/react-native-svg/-/react-native-svg-11.0.1.tgz#e92e7e9f9cb2604333fd5014fd4edcf62fea6496"
-    integrity sha512-XriIwSoe9eTtKyqxpNC6POSOqmXAB9mZQOm5tMoaimEqQOMfzgYrBoF9nY6VPGmaH5dRlWBqnnBf389APiZFcQ==
+  react-native-svg@^12.1.0:
+    version "12.1.0"
+    resolved "https://registry.yarnpkg.com/react-native-svg/-/react-native-svg-12.1.0.tgz#acfe48c35cd5fca3d5fd767abae0560c36cfc03d"
+    integrity sha512-1g9qBRci7man8QsHoXn6tP3DhCDiypGgc6+AOWq+Sy+PmP6yiyf8VmvKuoqrPam/tf5x+ZaBT2KI0gl7bptZ7w==
     dependencies:
       css-select "^2.1.0"
       css-tree "^1.0.0-alpha.39"
+  
+  react-native-vector-icons@^3.0.0:
+    version "3.0.0"
+    resolved "https://registry.yarnpkg.com/react-native-vector-icons/-/react-native-vector-icons-3.0.0.tgz#a2f63757dee4fb89f67eef660e25e86926ae6827"
+    integrity sha1-ovY3V97k+4n2fu9mDiXoaSauaCc=
+    dependencies:
+      lodash "^4.0.0"
+      yargs "^6.3.0"
   
   react-native-view-shot@3.1.2:
     version "3.1.2"
@@ -4860,6 +4967,14 @@ Lockfile:
       object-assign "^4.1.1"
       prop-types "^15.6.2"
   
+  read-pkg-up@^1.0.1:
+    version "1.0.1"
+    resolved "https://registry.yarnpkg.com/read-pkg-up/-/read-pkg-up-1.0.1.tgz#9d63c13276c065918d57f002a57f40a1b643fb02"
+    integrity sha1-nWPBMnbAZZGNV/ACpX9AobZD+wI=
+    dependencies:
+      find-up "^1.0.0"
+      read-pkg "^1.0.0"
+  
   read-pkg-up@^2.0.0:
     version "2.0.0"
     resolved "https://registry.yarnpkg.com/read-pkg-up/-/read-pkg-up-2.0.0.tgz#6b72a8048984e0c41e79510fd5e9fa99b3b549be"
@@ -4867,6 +4982,15 @@ Lockfile:
     dependencies:
       find-up "^2.0.0"
       read-pkg "^2.0.0"
+  
+  read-pkg@^1.0.0:
+    version "1.1.0"
+    resolved "https://registry.yarnpkg.com/read-pkg/-/read-pkg-1.1.0.tgz#f5ffaa5ecd29cb31c0474bca7d756b6bb29e3f28"
+    integrity sha1-9f+qXs0pyzHAR0vKfXVra7KePyg=
+    dependencies:
+      load-json-file "^1.0.0"
+      normalize-package-data "^2.3.2"
+      path-type "^1.0.0"
   
   read-pkg@^2.0.0:
     version "2.0.0"
@@ -5403,7 +5527,7 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/strict-uri-encode/-/strict-uri-encode-2.0.0.tgz#b9c7330c7042862f6b142dc274bbcc5866ce3546"
     integrity sha1-ucczDHBChi9rFC3CdLvMWGbONUY=
   
-  string-width@^1.0.1:
+  string-width@^1.0.1, string-width@^1.0.2:
     version "1.0.2"
     resolved "https://registry.yarnpkg.com/string-width/-/string-width-1.0.2.tgz#118bdf5b8cdc51a2a7e70d211e07e2b0b9b107d3"
     integrity sha1-EYvfW4zcUaKn5w0hHgfisLmxB9M=
@@ -5447,6 +5571,13 @@ Lockfile:
     integrity sha512-DuRs1gKbBqsMKIZlrffwlug8MHkcnpjs5VPmL1PAh+mA30U0DTotfDZ0d2UUsXpPmPmMMJ6W773MaA3J+lbiWA==
     dependencies:
       ansi-regex "^4.1.0"
+  
+  strip-bom@^2.0.0:
+    version "2.0.0"
+    resolved "https://registry.yarnpkg.com/strip-bom/-/strip-bom-2.0.0.tgz#6219a85616520491f35788bdbf1447a99c7e6b0e"
+    integrity sha1-YhmoVhZSBJHzV4i9vxRHqZx+aw4=
+    dependencies:
+      is-utf8 "^0.2.0"
   
   strip-bom@^3.0.0:
     version "3.0.0"
@@ -5793,6 +5924,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-3.0.0.tgz#fc804e458cc460009b1a2b966bc8817d2578aefb"
     integrity sha512-9GSJUgz1D4MfyKU7KRqwOjXCXTqWdFNvEr7eUBYchQiVc744mqK/MzXPNR2WsPkmkOa4ywfg8C2n8h+13Bey1Q==
   
+  which-module@^1.0.0:
+    version "1.0.0"
+    resolved "https://registry.yarnpkg.com/which-module/-/which-module-1.0.0.tgz#bba63ca861948994ff307736089e3b96026c2a4f"
+    integrity sha1-u6Y8qGGUiZT/MHc2CJ47lgJsKk8=
+  
   which-module@^2.0.0:
     version "2.0.0"
     resolved "https://registry.yarnpkg.com/which-module/-/which-module-2.0.0.tgz#d9ef07dce77b9902b8a3a8fa4b31c3e3f7e6e87a"
@@ -5907,6 +6043,13 @@ Lockfile:
       camelcase "^5.0.0"
       decamelize "^1.2.0"
   
+  yargs-parser@^4.2.0:
+    version "4.2.1"
+    resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-4.2.1.tgz#29cceac0dc4f03c6c87b4a9f217dd18c9f74871c"
+    integrity sha1-KczqwNxPA8bIe0qfIX3RjJ90hxw=
+    dependencies:
+      camelcase "^3.0.0"
+  
   yargs-parser@^7.0.0:
     version "7.0.0"
     resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-7.0.0.tgz#8d0ac42f16ea55debd332caf4c4038b3e3f5dfd9"
@@ -5931,6 +6074,25 @@ Lockfile:
       which-module "^2.0.0"
       y18n "^3.2.1 || ^4.0.0"
       yargs-parser "^11.1.1"
+  
+  yargs@^6.3.0:
+    version "6.6.0"
+    resolved "https://registry.yarnpkg.com/yargs/-/yargs-6.6.0.tgz#782ec21ef403345f830a808ca3d513af56065208"
+    integrity sha1-eC7CHvQDNF+DCoCMo9UTr1YGUgg=
+    dependencies:
+      camelcase "^3.0.0"
+      cliui "^3.2.0"
+      decamelize "^1.1.1"
+      get-caller-file "^1.0.1"
+      os-locale "^1.4.0"
+      read-pkg-up "^1.0.1"
+      require-directory "^2.1.1"
+      require-main-filename "^1.0.1"
+      set-blocking "^2.0.0"
+      string-width "^1.0.2"
+      which-module "^1.0.0"
+      y18n "^3.2.1"
+      yargs-parser "^4.2.0"
   
   yargs@^9.0.0:
     version "9.0.1"
