@@ -19,25 +19,27 @@ import { Input } from "react-native-elements";
 import axios from "axios";
 import Loading from "../Loading";
 import { useIsFocused } from "@react-navigation/native";
+import { ActivityIndicator } from "react-native-paper";
 
 export default function PendingOrdersForm(props) {
   const { navigation, route } = props;
 
   const [data, setData] = useState();
+  const [dataTotal, setDataTotal] = useState(0);
+  const [reached, setReached] = useState(0);
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const isFocused = useIsFocused();
   const { url } = Constants;
   const { manifiesto, carrier, user } = route.params;
-  //  const { carrier, user } = route.params;
 
-  // let manifiestos = manifesto;
   const userP = user;
   const carrierUser = carrier;
   const [refresh, setRefresh] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [text, setText] = useState();
   const [arrayholder, setArrayholder] = useState([]);
-
+  const maxFila = 40;
   useEffect(() => {
     if (isFocused) {
       const getPendingOrders = async () => {
@@ -46,47 +48,66 @@ export default function PendingOrdersForm(props) {
         const credentialsUser = await AsyncStorage.getItem(
           "@localStorage:dataOrder"
         );
-        console.log(credentialsUser);
+
         if (credentialsUser !== null) {
           const listData = JSON.parse(credentialsUser).filter(
             (pedido) =>
-              //country.pedido.includes(lowerCaseQuery) &&
               pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
           );
-
-          setData(listData);
+          setData(listData.slice(0, maxFila));
+          setDataTotal(listData.length);
           setArrayholder(listData);
         }
         setIsvisibleLoading(false);
       };
 
       getPendingOrders();
+    } else {
+      setData([]);
     }
   }, [isFocused]);
 
-  async function cargaData() {
-    const credentialsUser = await AsyncStorage.getItem(
-      "@localStorage:dataOrder"
-    );
+  // async function cargaData() {
+  //   const credentialsUser = await AsyncStorage.getItem(
+  //     "@localStorage:dataOrder"
+  //   )
 
-    if (credentialsUser !== null) {
-      const listData = JSON.parse(credentialsUser).filter(
-        (pedido) =>
-          //country.pedido.includes(lowerCaseQuery) &&
-          pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
-      );
-      console.log(listData);
-      setData(listData);
-      setArrayholder(listData);
+  //   if (credentialsUser !== null) {
+  //     const listData = JSON.parse(credentialsUser).filter(
+  //       (pedido) =>
+  //         //country.pedido.includes(lowerCaseQuery) &&
+  //         pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
+  //     );
+  //     console.log("slice" + listData.slice(1, 2));
+  //     setData(listData.slice(1, 10));
+  //     setArrayholder(listData);
+  //   }
+  // }
+
+  // const handleLoadMore = () => {
+  function handleLoadMore() {
+    console.log(data.length);
+    console.log("total:" + dataTotal);
+    let start = data.length;
+    if (data.length < dataTotal) {
+      setIsLoading(true);
+      setData([...data, ...arrayholder.slice(start, start + maxFila)]);
+    } else {
+      setIsLoading(false);
     }
+    // console.log(data);
   }
 
   function searchData(text) {
-    const newData = arrayholder.filter((item) => {
-      return item.pedido.indexOf(text) > -1;
-    });
-
-    setData(newData);
+    if (text.length > 0) {
+      setReached(1);
+      const newData = arrayholder.filter((item) => {
+        return item.pedido.indexOf(text) > -1;
+      });
+      setData(newData);
+    } else {
+      setReached(0);
+    }
   }
   const rememberOrders = async (bd) => {
     try {
@@ -124,15 +145,16 @@ export default function PendingOrdersForm(props) {
             (pedido) =>
               pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
           );
-          setData(listData);
+          setData(JSON.parse(listData));
           setArrayholder(listData);
         } else {
-          rememberOrders(response.data.trim());
-          const listData = JSON.parse(response.data.trim()).filter(
+          rememberOrders(JSON.stringify(response.data));
+          const listData = response.data.filter(
             (pedido) =>
               pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
           );
-          setData(listData);
+          setData(listData.slice(0, maxFila));
+          setDataTotal(listData.length);
           setArrayholder(listData);
         }
 
@@ -207,102 +229,152 @@ export default function PendingOrdersForm(props) {
             {carrierUser}
           </Text>
         </View>
-        <FlatList
-          keyExtractor={(item, index) => `${index}`}
-          data={data}
-          renderItem={({ item }) => (
-            <Order
-              item={item}
-              navigation={navigation}
-              user={userP}
-              carrierUser={carrierUser}
-              refresh={refresh}
-              setRefresh={setRefresh}
-            />
-          )}
-          ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
+
+        {reached === 0 ? (
+          <FlatList
+            keyExtractor={(item, index) => `${index}`}
+            data={data}
+            renderItem={({ item }) => (
+              <Order
+                item={item}
+                navigation={navigation}
+                user={userP}
+                carrierUser={carrierUser}
+                refresh={refresh}
+                setRefresh={setRefresh}
+              />
+            )}
+            ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            onEndReachedThreshold={5}
+            onEndReached={() => handleLoadMore()}
+            ListFooterComponent={<FooterList />}
+          />
+        ) : (
+          <FlatList
+            keyExtractor={(item, index) => `${index}`}
+            data={data}
+            renderItem={({ item }) => (
+              <Order
+                item={item}
+                navigation={navigation}
+                user={userP}
+                carrierUser={carrierUser}
+                refresh={refresh}
+                setRefresh={setRefresh}
+              />
+            )}
+            ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          />
+        )}
         {<Loading isVisible={isVisibleLoading} text="Cargando" />}
       </View>
     </SafeAreaView>
   );
-}
 
-function SeparatorManifest() {
-  return (
-    <View
-      style={{
-        height: 1,
-        // width: "100%",
-        backgroundColor: "#CED0CE",
-      }}
-    />
-  );
-}
+  function SeparatorManifest() {
+    return (
+      <View
+        style={{
+          height: 1,
+          // width: "100%",
+          backgroundColor: "#CED0CE",
+        }}
+      />
+    );
+  }
 
-function Order(props) {
-  const {
-    pedido,
-    direccion,
-    comuna,
-    manifiesto,
-    nombre_cliente,
-    carrier,
-    fecha,
-    latitud,
-    longitud,
-    tipo_despacho,
-  } = props.item;
-  const { navigation, user, carrierUser } = props;
-
-  return (
-    <TouchableOpacity
-      onPress={() =>
-        navigation.navigate("manageOrder", {
-          pedido: pedido,
-          manifiesto: manifiesto,
-          direccion: direccion,
-          comuna: comuna,
-          nombre_cliente: nombre_cliente,
-          carrier: carrier,
-          fecha: fecha,
-          user: user,
-          carrierUser: carrierUser,
-          latitud: latitud,
-          longitud: longitud,
-          tipo_despacho: tipo_despacho,
-        })
-      }
-    >
-      <View style={styles.item}>
-        <View style={styles.inline}>
-          <Text style={styles.pedido}>{pedido} </Text>
-          <Text style={styles.manifiesto}>{manifiesto} </Text>
+  function FooterList(props) {
+    if (isLoading) {
+      return (
+        <View style={styles.loaderOrders}>
+          <ActivityIndicator size="large" />
         </View>
-        <View style={styles.inline}>
-          <Image
-            source={require("../../../assets/google.png")}
-            style={styles.logo}
-            resizeMode="contain"
-            //backgroundColor="red"
-          />
-          <View style={styles.containerInfo}>
-            <Text style={styles.comuna}>{comuna} </Text>
-            <Text style={styles.direccion}>{direccion}</Text>
-            <Text style={styles.nombre_cliente}>{nombre_cliente}</Text>
+      );
+    } else {
+      return (
+        <View style={styles.notFoundOrders}>
+          <Text> Lista completa </Text>
+        </View>
+      );
+    }
+  }
+
+  function Order(props) {
+    const {
+      pedido,
+      direccion,
+      comuna,
+      manifiesto,
+      nombre_cliente,
+      carrier,
+      fecha,
+      latitud,
+      longitud,
+      tipo_despacho,
+    } = props.item;
+    const { navigation, user, carrierUser } = props;
+
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("manageOrder", {
+            pedido: pedido,
+            manifiesto: manifiesto,
+            direccion: direccion,
+            comuna: comuna,
+            nombre_cliente: nombre_cliente,
+            carrier: carrier,
+            fecha: fecha,
+            user: user,
+            carrierUser: carrierUser,
+            latitud: latitud,
+            longitud: longitud,
+            tipo_despacho: tipo_despacho,
+          })
+        }
+      >
+        <View style={styles.item}>
+          <View style={styles.inline}>
+            <Text style={styles.pedido}>{pedido} </Text>
+            <Text style={styles.manifiesto}>{manifiesto} </Text>
+          </View>
+          <View style={styles.inline}>
+            <Image
+              source={require("../../../assets/google.png")}
+              style={styles.logo}
+              resizeMode="contain"
+              //backgroundColor="red"
+            />
+            <View style={styles.containerInfo}>
+              <Text style={styles.comuna}>{comuna} </Text>
+              <Text style={styles.direccion}>{direccion}</Text>
+              <Text style={styles.nombre_cliente}>{nombre_cliente}</Text>
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  }
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loaderOrders: {
+    marginTop: 10,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  notFoundOrders: {
+    marginTop: 10,
+    marginBottom: 20,
+    alignItems: "center",
   },
   SectionStyle: {
     flexDirection: "row",

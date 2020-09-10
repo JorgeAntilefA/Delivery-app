@@ -53,39 +53,6 @@ export default function ManifestsForm(props) {
     return axios.post(url, params);
   }
 
-  // const load = async () => {
-  //   await axios
-  //     .all([getListState(), getListIncidence(), getListManifest()])
-  //     .then(
-  //       axios.spread((...responses) => {
-  //         const responseListState = responses[0];
-  //         const responseListIncidence = responses[1];
-  //         const responseListManifest = responses[2];
-  //         //setSelectedValueS(JSON.parse(responseListState.data.trim()));
-  //         // rememberStates(responseListState.data.trim());
-  //         //rememberIncidents(responseListIncidence.data.trim());
-
-  //         if (Platform.OS === "ios") {
-  //           console.log(responseListManifest.data);
-
-  //           setData(responseListManifest.data);
-  //           // RememberStates(responseListState.data.trim());
-  //           //rememberIncidents(responseListIncidence.data);
-  //         } else {
-  //           rememberStates(responseListState.data.trim());
-  //           rememberIncidents(responseListIncidence.data.trim());
-  //           setData(JSON.parse(responseListManifest.data.trim()));
-  //         }
-
-  //         setIsvisibleLoading(false);
-  //         setRefreshing(false);
-  //       })
-  //     )
-  //     .catch((errors) => {
-  //       console.log(errors);
-  //     });
-  // };
-
   const load = async () => {
     if (Platform.OS === "ios") {
       const params = new URLSearchParams();
@@ -95,8 +62,7 @@ export default function ManifestsForm(props) {
       await axios
         .post(url, params)
         .then((response) => {
-          //rememberOrders(response.data.trim());
-          console.log(response.data);
+          // console.log(response.data);
           setData(response.data);
           setIsvisibleLoading(false);
           setRefreshing(false);
@@ -114,21 +80,10 @@ export default function ManifestsForm(props) {
             const responseListState = responses[0];
             const responseListIncidence = responses[1];
             const responseListManifest = responses[2];
-            //setSelectedValueS(JSON.parse(responseListState.data.trim()));
-            // rememberStates(responseListState.data.trim());
-            //rememberIncidents(responseListIncidence.data.trim());
-
-            // if (Platform.OS === "ios") {
-            //   console.log(responseListManifest.data);
-
-            //   setData(responseListManifest.data);
-            //   // RememberStates(responseListState.data.trim());
-            //   //rememberIncidents(responseListIncidence.data);
-            // } else {
-            rememberStates(responseListState.data.trim());
-            rememberIncidents(responseListIncidence.data.trim());
-            setData(JSON.parse(responseListManifest.data.trim()));
-            // }
+            //console.log(responseListManifest);
+            rememberStates(JSON.stringify(responseListState.data));
+            rememberIncidents(JSON.stringify(responseListIncidence.data));
+            setData(responseListManifest.data);
 
             setIsvisibleLoading(false);
             setRefreshing(false);
@@ -280,11 +235,11 @@ export default function ManifestsForm(props) {
       const params = new URLSearchParams();
       params.append("opcion", "getPedidosV3");
       params.append("manifiestos", manifiestos.toString());
-
+      console.log(manifiestos.toString());
       await axios
         .post(url, params)
         .then((response) => {
-          //
+          // console.log(JSON.parse(response.data));
           //RemenberOrders(response.data);
           //setOrders(response.data);
           if (Platform.OS === "ios") {
@@ -297,7 +252,7 @@ export default function ManifestsForm(props) {
               console.log(error);
             }
           } else {
-            RemenberOrders(response.data);
+            RemenberOrders(JSON.stringify(response.data));
           }
           navigation.navigate("pendings", {
             screen: "pendientes",

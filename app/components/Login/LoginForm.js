@@ -31,7 +31,6 @@ export default function LoginForm(props) {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [value, setValue] = React.useState("");
   useEffect(() => {
     const getRememberedUser = async () => {
@@ -40,7 +39,6 @@ export default function LoginForm(props) {
           "@localStorage:credentials"
         );
         if (credentialsUser !== null) {
-          console.log(credentialsUser);
           setUsername(JSON.parse(credentialsUser).username);
           setPassword(JSON.parse(credentialsUser).password);
           // return username;
@@ -99,8 +97,6 @@ export default function LoginForm(props) {
     setSecureTextEntry(!secureTextEntry);
   };
 
-  //const renderIconUser = (style) => <Icon {...style} name={"person"} />;
-
   const renderInputIcon = (props) => (
     <TouchableWithoutFeedback onPress={toggleSecureEntry}>
       <Icon {...props} name={!secureTextEntry ? "eye" : "eye-off"} />
@@ -112,10 +108,6 @@ export default function LoginForm(props) {
       <Icon {...props} name="person" />
     </TouchableWithoutFeedback>
   );
-
-  // const renderIconPassword = (style) => (
-  //   <Icon {...props} name={secureTextEntry ? "eye-off" : "eye"} />
-  // );
 
   rememberUser = async () => {
     try {
@@ -155,13 +147,13 @@ export default function LoginForm(props) {
               });
             }
           } else {
-            if (JSON.parse(response.data.trim()).id == "null") {
+            if (response.data.id == "null") {
               toastRef.current.show("Credenciales inválidas");
             } else {
               rememberUser();
               navigation.navigate("manifests", {
-                carrier: JSON.parse(response.data.trim()).carrier,
-                user: JSON.parse(response.data.trim()).nom,
+                carrier: response.data.carrier,
+                user: response.data.nom,
               });
             }
           }

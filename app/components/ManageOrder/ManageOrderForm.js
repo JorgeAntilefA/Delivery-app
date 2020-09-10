@@ -105,7 +105,7 @@ export default function ManageOrder(props) {
               const responseListIncidence = responses[0];
 
               // setSelectedValueS(JSON.parse(responseListState.data.trim()));
-              setSelectedValueI(JSON.parse(responseListIncidence.data.trim()));
+              setSelectedValueI(responseListIncidence.data);
             })
           )
           .catch((errors) => {
@@ -212,7 +212,7 @@ export default function ManageOrder(props) {
               {carrierUser}
             </Text>
           </View>
-          {latitud ? (
+          {latitud !== "" ? (
             <Map
               latitud={latitud}
               longitud={longitud}
