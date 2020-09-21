@@ -67,9 +67,9 @@ export default function ResponseIncidentsForm(props) {
         .post(url, params)
         .then((response) => {
           if (Platform.OS === "ios") {
-            setSelectedValueS(responseListState.data);
+            setSelectedValueS(response.data);
           } else {
-            setSelectedValueS(JSON.parse(responseListState.data.trim()));
+            setSelectedValueS(response.data);
           }
 
           setIsvisibleLoading(false);

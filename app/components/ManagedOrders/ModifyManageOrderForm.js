@@ -92,7 +92,7 @@ export default function ModifyManagedOrder(props) {
             if (Platform.OS === "ios") {
               setSelectedValueS(responseListState.data);
             } else {
-              setSelectedValueS(JSON.parse(responseListState.data.trim()));
+              setSelectedValueS(responseListState.data);
             }
           })
         )

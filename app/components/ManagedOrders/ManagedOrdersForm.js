@@ -14,20 +14,28 @@ import Constants from "./../../utils/Constants";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Input } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
+import { ActivityIndicator } from "react-native-paper";
+import Loading from "../Loading";
 //import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ManagedOrdersForm(props) {
   const [isVisibleLoading, setIsvisibleLoading] = useState(false);
   const [data, setData] = useState();
+  const [dataTotal, setDataTotal] = useState(0);
+  const [reached, setReached] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const { url } = Constants;
   const { navigation, route } = props;
   const isFocused = useIsFocused();
   const [userTitle, setUserTitle] = useState();
   const [carrierTitle, setCarrierTitle] = useState();
   const [arrayholder, setArrayholder] = useState([]);
+  const maxFila = 40;
 
   useEffect(() => {
+    //setIsvisibleLoading(true);
     if (isFocused) {
+      setIsvisibleLoading(true);
       const getRememberedOrders = async () => {
         try {
           const credentialsUser = await AsyncStorage.getItem(
@@ -41,11 +49,14 @@ export default function ManagedOrdersForm(props) {
                 (pedido.solicitud == "1" || pedido.gestion_usuario == "1")
             );
 
-            setData(listData);
+            setData(listData.slice(0, maxFila));
+            setDataTotal(listData.length);
             setArrayholder(listData);
+            setIsvisibleLoading(false);
           }
         } catch (error) {
           console.log(error);
+          setIsvisibleLoading(false);
         }
       };
 
@@ -65,15 +76,33 @@ export default function ManagedOrdersForm(props) {
 
       getRememberedOrders();
       getRememberedTitle();
+    } else {
+      setData([]);
     }
   }, [isFocused]);
 
-  function searchData(text) {
-    const newData = arrayholder.filter((item) => {
-      return item.pedido.indexOf(text) > -1;
-    });
+  function handleLoadMore() {
+    console.log(data.length);
+    console.log("total:" + dataTotal);
+    let start = data.length;
+    if (data.length < dataTotal) {
+      setIsLoading(true);
+      setData([...data, ...arrayholder.slice(start, start + maxFila)]);
+    } else {
+      setIsLoading(false);
+    }
+  }
 
-    setData(newData);
+  function searchData(text) {
+    if (text.length > 0) {
+      setReached(1);
+      const newData = arrayholder.filter((item) => {
+        return item.pedido.indexOf(text) > -1;
+      });
+      setData(newData);
+    } else {
+      setReached(0);
+    }
   }
   const renderIcon = (props) => (
     <TouchableWithoutFeedback>
@@ -82,6 +111,7 @@ export default function ManagedOrdersForm(props) {
   );
   return (
     <SafeAreaView style={styles.container}>
+      {<Loading isVisible={isVisibleLoading} text="Cargando" />}
       <View style={{ flex: 1 }}>
         {/* <View style={styles.containerInput}>
           <Input
@@ -125,107 +155,155 @@ export default function ManagedOrdersForm(props) {
             {userTitle}
             {" - "}
             {carrierTitle}
+            {" - "}
+            {dataTotal}
           </Text>
         </View>
-        <FlatList
-          keyExtractor={(item, index) => `${index}`}
-          data={data}
-          renderItem={({ item }) => (
-            <Order
-              item={item}
-              navigation={navigation}
-              user={userTitle}
-              carrierUser={carrierTitle}
-            />
-          )}
-          ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
-        />
+        {reached === 0 ? (
+          <FlatList
+            keyExtractor={(item, index) => `${index}`}
+            data={data}
+            renderItem={({ item }) => (
+              <Order
+                item={item}
+                navigation={navigation}
+                user={userTitle}
+                carrierUser={carrierTitle}
+              />
+            )}
+            ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
+            onEndReachedThreshold={5}
+            onEndReached={() => handleLoadMore()}
+            ListFooterComponent={<FooterList />}
+          />
+        ) : (
+          <FlatList
+            keyExtractor={(item, index) => `${index}`}
+            data={data}
+            renderItem={({ item }) => (
+              <Order
+                item={item}
+                navigation={navigation}
+                user={userTitle}
+                carrierUser={carrierTitle}
+              />
+            )}
+            ItemSeparatorComponent={({ item }) => <SeparatorManifest />}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
-}
-function SeparatorManifest() {
-  return (
-    <View
-      style={{
-        height: 1,
-        // width: "100%",
-        backgroundColor: "#CED0CE",
-      }}
-    />
-  );
-}
-function Order(props) {
-  const {
-    pedido,
-    direccion,
-    comuna,
-    manifiesto,
-    nombre_cliente,
-    carrier,
-    fecha,
-    estado_entrega,
-    recibe_nombre,
-    recibe_rut,
-    ruta_foto,
-    ruta_firma,
-    tipo_despacho,
-  } = props.item;
-  const { navigation, user, carrierUser } = props;
 
-  return (
-    <TouchableOpacity
-      onPress={() =>
-        navigation.navigate("modifyManagedOrder", {
-          pedido: pedido,
-          manifiesto: manifiesto,
-          direccion: direccion,
-          comuna: comuna,
-          nombre_cliente: nombre_cliente,
-          carrier: carrier,
-          fecha: fecha,
-          user: user,
-          carrierUser: carrierUser,
-          estado_entrega: estado_entrega,
-          recibe_nombre: recibe_nombre,
-          recibe_rut: recibe_rut,
-          ruta_foto: ruta_foto,
-          ruta_firma: ruta_firma,
-          tipo_despacho: tipo_despacho,
-        })
-      }
-    >
-      <View style={styles.item}>
-        <View style={styles.inline}>
-          <Text style={styles.pedido}>{pedido} </Text>
-          <Text style={styles.manifiesto}>{manifiesto} </Text>
+  function SeparatorManifest() {
+    return (
+      <View
+        style={{
+          height: 1,
+          // width: "100%",
+          backgroundColor: "#CED0CE",
+        }}
+      />
+    );
+  }
+
+  function FooterList(props) {
+    if (isLoading) {
+      return (
+        <View style={styles.loaderOrders}>
+          <ActivityIndicator size="large" />
         </View>
-        <View style={styles.inline}>
-          <Image
-            source={require("../../../assets/google.png")}
-            style={styles.logo}
-            resizeMode="contain"
-            //backgroundColor="red"
-          />
-          <View style={styles.containerInfo}>
-            <Text style={styles.comuna}>{comuna} </Text>
-            <Text style={styles.direccion}>{direccion}</Text>
-            <Text style={styles.nombre_cliente}>{nombre_cliente}</Text>
-            {estado_entrega == "Entregado" ? (
-              <Text style={styles.entregado}>{estado_entrega}</Text>
-            ) : (
-              <Text style={styles.otroEstado}>{estado_entrega}</Text>
-            )}
+      );
+    } else {
+      return (
+        <View style={styles.notFoundOrders}>
+          <Text> Lista completa </Text>
+        </View>
+      );
+    }
+  }
+
+  function Order(props) {
+    const {
+      pedido,
+      direccion,
+      comuna,
+      manifiesto,
+      nombre_cliente,
+      carrier,
+      fecha,
+      estado_entrega,
+      recibe_nombre,
+      recibe_rut,
+      ruta_foto,
+      ruta_firma,
+      tipo_despacho,
+    } = props.item;
+    const { navigation, user, carrierUser } = props;
+
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("modifyManagedOrder", {
+            pedido: pedido,
+            manifiesto: manifiesto,
+            direccion: direccion,
+            comuna: comuna,
+            nombre_cliente: nombre_cliente,
+            carrier: carrier,
+            fecha: fecha,
+            user: user,
+            carrierUser: carrierUser,
+            estado_entrega: estado_entrega,
+            recibe_nombre: recibe_nombre,
+            recibe_rut: recibe_rut,
+            ruta_foto: ruta_foto,
+            ruta_firma: ruta_firma,
+            tipo_despacho: tipo_despacho,
+          })
+        }
+      >
+        <View style={styles.item}>
+          <View style={styles.inline}>
+            <Text style={styles.pedido}>{pedido} </Text>
+            <Text style={styles.manifiesto}>{manifiesto} </Text>
+          </View>
+          <View style={styles.inline}>
+            <Image
+              source={require("../../../assets/google.png")}
+              style={styles.logo}
+              resizeMode="contain"
+              //backgroundColor="red"
+            />
+            <View style={styles.containerInfo}>
+              <Text style={styles.comuna}>{comuna} </Text>
+              <Text style={styles.direccion}>{direccion}</Text>
+              <Text style={styles.nombre_cliente}>{nombre_cliente}</Text>
+              {estado_entrega == "Entregado" ? (
+                <Text style={styles.entregado}>{estado_entrega}</Text>
+              ) : (
+                <Text style={styles.otroEstado}>{estado_entrega}</Text>
+              )}
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  }
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loaderOrders: {
+    marginTop: 10,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  notFoundOrders: {
+    marginTop: 10,
+    marginBottom: 20,
+    alignItems: "center",
   },
   inline: {
     flex: 1,

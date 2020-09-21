@@ -98,6 +98,7 @@ export default function ManageOrder(props) {
             console.log(errors);
           });
       } else {
+        setIsvisibleLoading(true);
         await axios
           .all([getListIncidence()])
           .then(
@@ -115,6 +116,7 @@ export default function ManageOrder(props) {
         const statesAPP = await AsyncStorage.getItem("@localStorage:states");
 
         setSelectedValueS(JSON.parse(statesAPP));
+        setIsvisibleLoading(false);
       }
     };
     getManifests();

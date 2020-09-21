@@ -40,10 +40,11 @@ export default function PendingOrdersForm(props) {
   const [text, setText] = useState();
   const [arrayholder, setArrayholder] = useState([]);
   const maxFila = 40;
+
   useEffect(() => {
     if (isFocused) {
+      setIsvisibleLoading(true);
       const getPendingOrders = async () => {
-        setIsvisibleLoading(true);
         setText("");
         const credentialsUser = await AsyncStorage.getItem(
           "@localStorage:dataOrder"
@@ -57,8 +58,8 @@ export default function PendingOrdersForm(props) {
           setData(listData.slice(0, maxFila));
           setDataTotal(listData.length);
           setArrayholder(listData);
+          setIsvisibleLoading(false);
         }
-        setIsvisibleLoading(false);
       };
 
       getPendingOrders();
@@ -67,24 +68,6 @@ export default function PendingOrdersForm(props) {
     }
   }, [isFocused]);
 
-  // async function cargaData() {
-  //   const credentialsUser = await AsyncStorage.getItem(
-  //     "@localStorage:dataOrder"
-  //   )
-
-  //   if (credentialsUser !== null) {
-  //     const listData = JSON.parse(credentialsUser).filter(
-  //       (pedido) =>
-  //         //country.pedido.includes(lowerCaseQuery) &&
-  //         pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
-  //     );
-  //     console.log("slice" + listData.slice(1, 2));
-  //     setData(listData.slice(1, 10));
-  //     setArrayholder(listData);
-  //   }
-  // }
-
-  // const handleLoadMore = () => {
   function handleLoadMore() {
     console.log(data.length);
     console.log("total:" + dataTotal);
@@ -174,6 +157,7 @@ export default function PendingOrdersForm(props) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {<Loading isVisible={isVisibleLoading} text="Cargando" />}
       {Platform.OS === "ios" ? (
         <StatusBar barStyle="dark-content" />
       ) : (
@@ -227,6 +211,8 @@ export default function PendingOrdersForm(props) {
             {userP}
             {" - "}
             {carrierUser}
+            {" - "}
+            {dataTotal}
           </Text>
         </View>
 
@@ -272,7 +258,6 @@ export default function PendingOrdersForm(props) {
             }
           />
         )}
-        {<Loading isVisible={isVisibleLoading} text="Cargando" />}
       </View>
     </SafeAreaView>
   );

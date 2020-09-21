@@ -80,7 +80,7 @@ export default function ManifestsForm(props) {
             const responseListState = responses[0];
             const responseListIncidence = responses[1];
             const responseListManifest = responses[2];
-            //console.log(responseListManifest);
+            //console.log(responseListManifest.data);
             rememberStates(JSON.stringify(responseListState.data));
             rememberIncidents(JSON.stringify(responseListIncidence.data));
             setData(responseListManifest.data);
@@ -225,12 +225,12 @@ export default function ManifestsForm(props) {
   );
 
   async function ValidateManifests() {
-    setIsvisibleLoading(true);
     if (selected.size == 0) {
       toastRef.current.show("Debes seleccionar manifiesto");
-    } else if (selected.size >= 5) {
+    } else if (selected.size > 5) {
       toastRef.current.show("5 manifiestos máximo");
     } else {
+      setIsvisibleLoading(true);
       let manifiestos = [...selected.keys()];
       const params = new URLSearchParams();
       params.append("opcion", "getPedidosV3");

@@ -79,7 +79,7 @@ export default function IncidentsForm(props) {
             if (Platform.OS === "ios") {
               setSelectedValueC(responseListCarrier.data);
             } else {
-              setSelectedValueC(JSON.parse(responseListCarrier.data.trim()));
+              setSelectedValueC(responseListCarrier.data);
             }
           })
         )
