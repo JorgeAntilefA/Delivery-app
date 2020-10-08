@@ -12,6 +12,7 @@ import {
   Button,
   Platform,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Icon, ListItem } from "react-native-elements";
 import * as Permissions from "expo-permissions";
@@ -178,7 +179,7 @@ export default function ManageOrder(props) {
   const OpenURLButton = ({ url, children }) => {
     const handlePress = useCallback(async () => {
       const supported = await Linking.canOpenURL(url);
-      console.log(url);
+
       if (supported) {
         await Linking.openURL(url);
       } else {
@@ -352,7 +353,6 @@ export default function ManageOrder(props) {
       value: item.tipo,
     }));
 
-    console.log(incidences);
     return (
       <View style={styles.picker}>
         <RNPickerSelect
@@ -378,7 +378,6 @@ export default function ManageOrder(props) {
       comuna: comuna,
       fecha: fecha,
     });
-    console.log(itemValue);
   }
 
   function Camera() {
@@ -519,6 +518,15 @@ export default function ManageOrder(props) {
     return datetime;
   }
 
+  function AlertSignal() {
+    Alert.alert(
+      "Alerta",
+      "Conexión de red lenta",
+      [{ text: "OK", onPress: () => console.log("OK Pressed") }],
+      { cancelable: false }
+    );
+  }
+
   async function RememberOrders(bd) {
     try {
       await AsyncStorage.removeItem("@localStorage:dataOrder");
@@ -642,15 +650,18 @@ export default function ManageOrder(props) {
           headers: {
             "content-type": "multipart/form-data",
           },
+          timeout: 10000,
         })
         .then((response) => {
           navigation.navigate("pendientes");
           setIsvisibleLoading(false);
         })
         .catch((error) => {
-          //console.log();
+          console.log("Error timeout");
           if (isNetworkError(error)) {
             console.log("Error Conexión: " + error);
+            AlertSignal();
+            setIsvisibleLoading(false);
           }
         });
 
