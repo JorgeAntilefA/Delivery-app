@@ -40,10 +40,12 @@ export default function PendingOrdersForm(props) {
   const [text, setText] = useState();
   const [arrayholder, setArrayholder] = useState([]);
   const maxFila = 40;
+  // let manifiestoRefresh = manifiesto;
 
   useEffect(() => {
     if (isFocused) {
       setIsvisibleLoading(true);
+      // manifiestoRefresh = manifiesto;
       const getPendingOrders = async () => {
         setText("");
         const credentialsUser = await AsyncStorage.getItem(
@@ -69,8 +71,6 @@ export default function PendingOrdersForm(props) {
   }, [isFocused]);
 
   function handleLoadMore() {
-    console.log(data.length);
-    console.log("total:" + dataTotal);
     let start = data.length;
     if (data.length < dataTotal) {
       setIsLoading(true);
@@ -78,7 +78,6 @@ export default function PendingOrdersForm(props) {
     } else {
       setIsLoading(false);
     }
-    // console.log(data);
   }
 
   function searchData(text) {
@@ -103,16 +102,18 @@ export default function PendingOrdersForm(props) {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    //console.log("actualizado");
+
+    const manifiestoRefresh = await AsyncStorage.getItem(
+      "@localStorage:manifest"
+    );
+    console.log("refresh: " + manifiestoRefresh);
     const params = new URLSearchParams();
     params.append("opcion", "getPedidosV3");
-    params.append("manifiestos", manifiesto.toString());
+    params.append("manifiestos", manifiestoRefresh);
 
     await axios
       .post(url, params)
       .then((response) => {
-        //rememberOrders(response.data.trim());
-
         if (Platform.OS === "ios") {
           console.log(response.data);
           try {

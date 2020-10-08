@@ -103,6 +103,14 @@ export default function ManifestsForm(props) {
     }
   };
 
+  const rememberManifest = async (bd) => {
+    try {
+      await AsyncStorage.setItem("@localStorage:manifest", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const rememberIncidents = async (bd) => {
     try {
       await AsyncStorage.setItem("@localStorage:incidents", bd);
@@ -235,13 +243,10 @@ export default function ManifestsForm(props) {
       const params = new URLSearchParams();
       params.append("opcion", "getPedidosV3");
       params.append("manifiestos", manifiestos.toString());
-      console.log(manifiestos.toString());
+      rememberManifest(manifiestos.toString());
       await axios
         .post(url, params)
         .then((response) => {
-          // console.log(JSON.parse(response.data));
-          //RemenberOrders(response.data);
-          //setOrders(response.data);
           if (Platform.OS === "ios") {
             try {
               AsyncStorage.setItem(
