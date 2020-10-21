@@ -19,7 +19,8 @@ import { Input } from "react-native-elements";
 import axios from "axios";
 import Loading from "../Loading";
 import { useIsFocused } from "@react-navigation/native";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, FAB } from "react-native-paper";
+import * as SQLite from "expo-sqlite";
 
 export default function PendingOrdersForm(props) {
   const { navigation, route } = props;
@@ -39,18 +40,42 @@ export default function PendingOrdersForm(props) {
   const [refreshing, setRefreshing] = useState(false);
   const [text, setText] = useState();
   const [arrayholder, setArrayholder] = useState([]);
+  const [dataOffline, setDataOffline] = useState(0);
+  const db = SQLite.openDatabase("db.offlineData");
   const maxFila = 40;
   // let manifiestoRefresh = manifiesto;
 
   useEffect(() => {
     if (isFocused) {
       setIsvisibleLoading(true);
-      // manifiestoRefresh = manifiesto;
+
       const getPendingOrders = async () => {
         setText("");
         const credentialsUser = await AsyncStorage.getItem(
           "@localStorage:dataOrder"
         );
+        //await countDataOffline(manifiesto.toString());
+        //console.log("dataoffline:" + dataOffline);
+        //console.log("offline:" + offline);
+        const manifiestoRefresh = await AsyncStorage.getItem(
+          "@localStorage:manifest"
+        );
+        db.transaction((tx) => {
+          // sending 4 arguments in executeSql
+          tx.executeSql(
+            "SELECT * FROM offline where manifiesto in ('" +
+              manifiestoRefresh +
+              "')",
+            null, // passing sql query and parameters:null
+            // success callback which sends two things Transaction object and ResultSet Object
+            (txObj, { rows: { _array } }) => {
+              console.log(_array.length);
+              setDataOffline(_array.length);
+            }
+            // failure callback which sends two things Transaction object and Error
+            //(txObj, error) => console.log('Error ', error)
+          ); // end executeSQL
+        }); // end transaction
 
         if (credentialsUser !== null) {
           const listData = JSON.parse(credentialsUser).filter(
@@ -58,6 +83,7 @@ export default function PendingOrdersForm(props) {
               pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
           );
           setData(listData.slice(0, maxFila));
+
           setDataTotal(listData.length);
           setArrayholder(listData);
           setIsvisibleLoading(false);
@@ -100,13 +126,146 @@ export default function PendingOrdersForm(props) {
     }
   };
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
+  async function countDataOffline(manifiestos) {
+    db.transaction((tx) => {
+      // sending 4 arguments in executeSql
+      tx.executeSql(
+        "SELECT * FROM offline where manifiesto in ('" + manifiestos + "')",
+        null, // passing sql query and parameters:null
+        // success callback which sends two things Transaction object and ResultSet Object
+        (txObj, { rows: { _array } }) => {
+          console.log(_array.length);
+          setDataOffline(_array.length);
+        }
+        // failure callback which sends two things Transaction object and Error
+        //(txObj, error) => console.log('Error ', error)
+      ); // end executeSQL
+    }); // end transaction
+  }
 
+  async function fetchData() {
     const manifiestoRefresh = await AsyncStorage.getItem(
       "@localStorage:manifest"
     );
-    console.log("refresh: " + manifiestoRefresh);
+
+    let insert = 0;
+    db.transaction((tx) => {
+      // sending 4 arguments in executeSql
+      tx.executeSql(
+        "SELECT * FROM offline where manifiesto in (" + manifiestoRefresh + ")",
+        null, // passing sql query and parameters:null
+        // success callback which sends two things Transaction object and ResultSet Object
+        (txObj, { rows: { _array, length } }) => {
+          console.log(length);
+          //console.log(_array);
+          if (length > 0) {
+            for (let x = 0; x < _array.length; x++) {
+              //let x = 0;
+              insert = insert + 1;
+              const params = new FormData();
+              //let firma;
+              params.append("opcion", "guardaPedido");
+              params.append("pedido", _array[x].pedido);
+              params.append("manifiesto", _array[x].manifiesto);
+              params.append("fecha_manifiesto", _array[x].fecha);
+              params.append("hora_gestion", _array[x].hora_gestion);
+              params.append("fecha_gestion", _array[x].fecha_gestion);
+              params.append("estado_entrega", _array[x].estado_entrega);
+              params.append("encargado", _array[x].gestion_usuario);
+              params.append("carrier", _array[x].carrier);
+              params.append("latitud", _array[x].latitud);
+              params.append("longitud", _array[x].longitud);
+              params.append("recibe_nombre", _array[x].recibe_nombre);
+              params.append("recibe_rut", _array[x].recibe_rut);
+              params.append("observacion", _array[x].observacion);
+              params.append("tipo_despacho", _array[x].tipo_despacho);
+              // if (_array[x].ruta_firma !== null) {
+              // params.append("imgFirma", _array[x].ruta_firma);
+              //params.append("imgFirma", "");
+              // params.append("imgPedido", "");
+              // }
+              if (_array[x].ruta_foto !== "") {
+                let type = _array[x].type_foto;
+                params.append("imgPedido", {
+                  uri: _array[x].ruta_foto,
+                  name: _array[x].nombre_foto,
+                  type,
+                });
+              }
+              axios
+                .post(url, params, {
+                  headers: {
+                    "content-type": "multipart/form-data",
+                  },
+                  timeout: 10000,
+                })
+                .then((response) => {
+                  if (response.data[0].guardado === "true") {
+                    console.log("guardado offline");
+                    deleteOffline(_array[x].id);
+                    setDataOffline(0);
+                  }
+
+                  setIsvisibleLoading(false);
+                })
+                .catch((error) => {
+                  console.log("Error timeout");
+                  setIsvisibleLoading(false);
+                  // if (isNetworkError(error)) {
+                  console.log("Error Conexión: " + error);
+                  setIsvisibleLoading(false);
+                  //  }
+                });
+            }
+          } else {
+            console.log("No hay datos offlines ");
+          }
+          //    }
+        }
+      ); // end executeSQL
+    }); // end transaction
+
+    // db.transaction((tx) => {
+    //   // sending 4 arguments in executeSql
+    //   tx.executeSql(
+    //     "SELECT * FROM offline where manifiesto in ('" +
+    //       manifiestoRefresh +
+    //       "')",
+    //     null, // passing sql query and parameters:null
+    //     // success callback which sends two things Transaction object and ResultSet Object
+    //     (txObj, { rows: { _array } }) => {
+    //       console.log(_array.length);
+    //       setDataOffline(_array.length);
+    //     }
+    //     // failure callback which sends two things Transaction object and Error
+    //     //(txObj, error) => console.log('Error ', error)
+    //   ); // end executeSQL
+    // }); // end transaction
+  }
+
+  function deleteOffline(id) {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "DELETE FROM offline WHERE id = ? ",
+        [id],
+        (txObj, resultSet) => {
+          if (resultSet.rowsAffected > 0) {
+            console.log("borrado:" + id);
+          }
+        }
+      );
+    });
+  }
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    //setIsvisibleLoading(true);
+    let offline = await fetchData();
+    console.log("actualizando..");
+    const manifiestoRefresh = await AsyncStorage.getItem(
+      "@localStorage:manifest"
+    );
+
     const params = new URLSearchParams();
     params.append("opcion", "getPedidosV3");
     params.append("manifiestos", manifiestoRefresh);
@@ -137,8 +296,9 @@ export default function PendingOrdersForm(props) {
             (pedido) =>
               pedido.estado_entrega === "Sin Estado" && pedido.solicitud == "1"
           );
+          console.log(listData.length);
           setData(listData.slice(0, maxFila));
-          setDataTotal(listData.length);
+          setDataTotal(listData.length - dataOffline);
           setArrayholder(listData);
         }
 
@@ -194,7 +354,7 @@ export default function PendingOrdersForm(props) {
             <TouchableOpacity onPress={() => onRefresh()} activeOpacity={0.5}>
               <Icon
                 name="refresh"
-                size={34}
+                size={30}
                 color="white"
                 style={{ marginLeft: 5, marginTop: 5 }}
               />
@@ -260,9 +420,19 @@ export default function PendingOrdersForm(props) {
           />
         )}
       </View>
+      <ManifestButton />
     </SafeAreaView>
   );
 
+  function ManifestButton() {
+    return (
+      <FAB
+        style={styles.fab}
+        label={dataOffline.toString()}
+        onPress={() => ValidateManifests()}
+      />
+    );
+  }
   function SeparatorManifest() {
     return (
       <View
@@ -303,6 +473,7 @@ export default function PendingOrdersForm(props) {
       latitud,
       longitud,
       tipo_despacho,
+      telefono,
     } = props.item;
     const { navigation, user, carrierUser } = props;
 
@@ -322,6 +493,7 @@ export default function PendingOrdersForm(props) {
             latitud: latitud,
             longitud: longitud,
             tipo_despacho: tipo_despacho,
+            telefono: telefono,
           })
         }
       >
@@ -426,6 +598,13 @@ const styles = StyleSheet.create({
   },
   nombre_cliente: {
     fontSize: 17,
+  },
+  fab: {
+    position: "absolute",
+    margin: 36,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "red",
   },
   item: {
     padding: 10,

@@ -16,6 +16,7 @@ import Loading from "../Loading";
 import Constants from "../../utils/Constants";
 import { FAB } from "react-native-paper";
 import Toast from "react-native-easy-toast";
+import * as SQLite from "expo-sqlite";
 
 export default function ManifestsForm(props) {
   const { navigation, route } = props;
@@ -28,6 +29,8 @@ export default function ManifestsForm(props) {
   const { url } = Constants;
   const toastRef = useRef();
   const [refreshing, setRefreshing] = useState(false);
+  const [countOff, setCountOff] = useState(0);
+  const db = SQLite.openDatabase("db.offlineData");
 
   function getListState() {
     const params = new URLSearchParams();
@@ -232,6 +235,23 @@ export default function ManifestsForm(props) {
     </SafeAreaView>
   );
 
+  async function fetchData(manifiesto) {
+    db.transaction((tx) => {
+      // sending 4 arguments in executeSql
+      tx.executeSql(
+        "SELECT * FROM offline where manifiesto in ('" + manifiesto + "')",
+        null, // passing sql query and parameters:null
+        // success callback which sends two things Transaction object and ResultSet Object
+        (txObj, { rows: { _array } }) => {
+          console.log(_array.length);
+          setCountOff(_array.length);
+        }
+        // failure callback which sends two things Transaction object and Error
+        //(txObj, error) => console.log('Error ', error)
+      ); // end executeSQL
+    }); // end transaction
+  }
+
   async function ValidateManifests() {
     if (selected.size == 0) {
       toastRef.current.show("Debes seleccionar manifiesto");
@@ -244,9 +264,12 @@ export default function ManifestsForm(props) {
       params.append("opcion", "getPedidosV3");
       params.append("manifiestos", manifiestos.toString());
       rememberManifest(manifiestos.toString());
+      // let offline = await fetchData(manifiestos.toString());
+      //console.log("oo:" + countOff);
       await axios
         .post(url, params)
         .then((response) => {
+          //console.log(response.data);
           if (Platform.OS === "ios") {
             try {
               AsyncStorage.setItem(
@@ -265,6 +288,7 @@ export default function ManifestsForm(props) {
               manifiesto: [...selected.keys()],
               carrier: carrier,
               user: user,
+              //offline: countOff,
             },
           });
 

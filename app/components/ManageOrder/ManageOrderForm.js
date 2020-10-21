@@ -26,6 +26,7 @@ import Toast from "react-native-easy-toast";
 import { Input } from "@ui-kitten/components";
 import { useIsFocused } from "@react-navigation/native";
 import RNPickerSelect from "react-native-picker-select";
+import * as SQLite from "expo-sqlite";
 
 export default function ManageOrder(props) {
   const { navigation, route } = props;
@@ -41,6 +42,7 @@ export default function ManageOrder(props) {
     latitud,
     longitud,
     tipo_despacho,
+    telefono,
   } = route.params;
 
   const [selectedValueState, setSelectedState] = useState("cero");
@@ -63,7 +65,7 @@ export default function ManageOrder(props) {
   const { rut } = route.params;
   const toastRef = useRef();
   const isFocused = useIsFocused();
-
+  const db = SQLite.openDatabase("db.offlineData");
   function getListIncidence() {
     const params = new URLSearchParams();
     params.append("opcion", "getTiposSolicitudes");
@@ -100,6 +102,7 @@ export default function ManageOrder(props) {
           });
       } else {
         setIsvisibleLoading(true);
+        await tableOffline();
         await axios
           .all([getListIncidence()])
           .then(
@@ -122,6 +125,23 @@ export default function ManageOrder(props) {
     };
     getManifests();
   }, []);
+
+  async function tableOffline() {
+    db.transaction((tx) => {
+      //tx.executeSql("DROP TABLE IF EXISTS offline ");
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS offline (id INTEGER PRIMARY KEY AUTOINCREMENT, carrier TEXT,comuna text," +
+          "direccion text,estado_entrega text,fecha text,gestion_usuario text," +
+          "id_solicitudes_carrier_sac_estado text,latitud text,longitud text," +
+          "manifiesto text,nombre_cliente text,observacion_sac text,pedido text," +
+          "recibe_nombre text, recibe_rut text,ruta_firma text,ruta_foto text," +
+          "nombre_foto text,type_foto text, solicitud text,tipo_solicitud text,visto_proveedor text," +
+          "tipo_despacho text,fecha_gestion text,observacion text,hora_gestion text)"
+      );
+    });
+
+    console.log("crea tabla");
+  }
 
   const getImageFromCamera = async () => {
     setIsvisibleLoadingCam(true);
@@ -155,24 +175,35 @@ export default function ManageOrder(props) {
       iconName: "file-document-outline",
       iconType: "material-community",
       action: null,
+      key: 1,
     },
     {
       text: pedido,
       iconName: "gift",
       iconType: "material-community",
       action: null,
+      key: 2,
     },
     {
       text: direccion,
       iconName: "map-marker",
       iconType: "material-community",
       action: null,
+      key: 3,
     },
     {
       text: nombre_cliente,
       iconName: "account-circle",
       iconType: "material-community",
       action: null,
+      key: 4,
+    },
+    {
+      text: telefono,
+      iconName: "phone",
+      iconType: "material-community",
+      action: null,
+      key: 5,
     },
   ];
 
@@ -237,19 +268,38 @@ export default function ManageOrder(props) {
               </OpenURLButton>
             </View>
           )}
-          {listInfo.map((item, index) => (
-            <ListItem
-              key={index}
-              title={item.text}
-              leftIcon={{
-                name: item.iconName,
-                type: item.iconType,
-                color: "#00a680",
-                size: 20,
-              }}
-              containerStyle={styles.containerListItem}
-            />
-          ))}
+          {listInfo.map(
+            (item, index) => (
+              // item.text === telefono ? (
+              //   <TouchableOpacity>
+              <ListItem
+                key={index}
+                title={item.text}
+                leftIcon={{
+                  name: item.iconName,
+                  type: item.iconType,
+                  color: "#00a680",
+                  size: 20,
+                }}
+                // onPress={() => item.action}
+                containerStyle={styles.containerListItem}
+              />
+            )
+            //   </TouchableOpacity>
+            // ) : (
+            //   <ListItem
+            //     key={item.text}
+            //     title={item.text}
+            //     leftIcon={{
+            //       name: item.iconName,
+            //       type: item.iconType,
+            //       color: "#00a680",
+            //       size: 20,
+            //     }}
+            //     containerStyle={styles.containerListItem}
+            //   />
+            // )
+          )}
           <Text style={styles.pedido}>Gestión del Pedido</Text>
           {Platform.OS === "ios" ? <RNPickerState /> : <PickerState />}
           {Platform.OS === "ios" ? (
@@ -489,7 +539,7 @@ export default function ManageOrder(props) {
     });
   }
 
-  function getDatetime() {
+  async function getDatetime() {
     let date = new Date().getDate(); //Current Date
     if (date < 10) {
       date = "0" + date;
@@ -518,11 +568,11 @@ export default function ManageOrder(props) {
     return datetime;
   }
 
-  function AlertSignal() {
+  async function AlertSignal(obj) {
     Alert.alert(
-      "Alerta",
-      "Conexión de red lenta",
-      [{ text: "OK", onPress: () => console.log("OK Pressed") }],
+      "Señal Inestable",
+      "Pedido de guardara offline, recuerda actualizar más tarde.",
+      [{ text: "OK", onPress: () => insertDataOffline(obj) }],
       { cancelable: false }
     );
   }
@@ -531,6 +581,23 @@ export default function ManageOrder(props) {
     try {
       await AsyncStorage.removeItem("@localStorage:dataOrder");
       await AsyncStorage.setItem("@localStorage:dataOrder", bd);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function RememberOffline(bd) {
+    try {
+      const offline = AsyncStorage.getItem("@localStorage:offline");
+      console.log(offline);
+      offline.push(bd);
+      AsyncStorage.setItem("@localStorage:offline", JSON.stringify(offline));
+      // RememberOffline(offline);
+      navigation.navigate("pendientes");
+      // setIsvisibleLoading(false);
+
+      //await AsyncStorage.removeItem("@localStorage:offline");
+      //await AsyncStorage.setItem("@localStorage:offline", bd);
     } catch (error) {
       console.log(error);
     }
@@ -547,15 +614,69 @@ export default function ManageOrder(props) {
     }
   }
 
+  function fetchData() {
+    db.transaction((tx) => {
+      // sending 4 arguments in executeSql
+      tx.executeSql(
+        "SELECT * FROM offline",
+        null, // passing sql query and parameters:null
+        // success callback which sends two things Transaction object and ResultSet Object
+        (txObj, { rows: { _array } }) => console.log(_array)
+        // failure callback which sends two things Transaction object and Error
+        //(txObj, error) => console.log('Error ', error)
+      ); // end executeSQL
+    }); // end transaction
+  }
+
+  function insertDataOffline(obj) {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO offline (carrier, comuna, direccion, estado_entrega, fecha, gestion_usuario, id_solicitudes_carrier_sac_estado, latitud, longitud, manifiesto, nombre_cliente, observacion_sac, pedido, recibe_nombre, recibe_rut, ruta_firma, ruta_foto,nombre_foto,type_foto, solicitud, tipo_despacho, tipo_solicitud, visto_proveedor,observacion,fecha_gestion,hora_gestion ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          obj.carrier,
+          obj.comuna,
+          obj.direccion,
+          obj.estado_entrega,
+          obj.fecha,
+          obj.gestion_usuario,
+          obj.id_solicitudes_carrier_sac_estado,
+          obj.latitud,
+          obj.longitud,
+          obj.manifiesto,
+          obj.nombre_cliente,
+          obj.observacion_sac,
+          obj.pedido,
+          obj.recibe_nombre,
+          obj.recibe_rut,
+          obj.ruta_firma,
+          obj.ruta_foto,
+          obj.name_foto,
+          obj.type_foto,
+          obj.solicitud,
+          obj.tipo_despacho,
+          obj.tipo_solicitud,
+          obj.visto_proveedor,
+          obj.observacion,
+          obj.fecha_gestion,
+          obj.hora_gestion,
+        ],
+        (txObj, resultSet) => console.log(resultSet),
+        (txObj, error) => console.log("Error", error)
+      );
+    });
+    navigation.navigate("pendientes");
+  }
+
   async function SaveOrder() {
     const credentialsUser = await AsyncStorage.getItem(
       "@localStorage:dataOrder"
     );
 
+    fetchData();
     if (selectedValueState == "cero") {
       toastRef.current.show("Debes seleccionar estado");
     } else {
-      setIsvisibleLoading(true);
+      // setIsvisibleLoading(true);
 
       let solicitud = 1;
       let tipo = null;
@@ -575,7 +696,7 @@ export default function ManageOrder(props) {
       }
 
       const resultGeo = await getLocation();
-      let fecha_gestion = getDatetime();
+      let fecha_gestion = await getDatetime();
       let date = new Date();
       let hour = date.getHours() + ":00";
       let localUri;
@@ -597,9 +718,9 @@ export default function ManageOrder(props) {
         params.append("imgPedido", { uri: localUri, name: filename, type });
         fotols = 1;
       }
-
+      let listData;
       if (credentialsUser !== null) {
-        const listData = JSON.parse(credentialsUser).filter(
+        listData = JSON.parse(credentialsUser).filter(
           (pedidoF) => pedidoF.pedido !== pedido
         );
 
@@ -626,8 +747,9 @@ export default function ManageOrder(props) {
           visto_proveedor: null,
           tipo_despacho: tipo_despacho,
         };
-        await listData.push(obj);
-        await RememberOrders(JSON.stringify(listData));
+
+        listData.push(obj);
+        RememberOrders(JSON.stringify(listData));
       }
 
       params.append("opcion", "guardaPedido");
@@ -645,7 +767,7 @@ export default function ManageOrder(props) {
       params.append("recibe_rut", rut ? rut : "");
       params.append("observacion", observacion);
       params.append("tipo_despacho", tipo_despacho);
-      axios
+      await axios
         .post(url, params, {
           headers: {
             "content-type": "multipart/form-data",
@@ -653,14 +775,49 @@ export default function ManageOrder(props) {
           timeout: 10000,
         })
         .then((response) => {
-          navigation.navigate("pendientes");
+          if (response.data[0].guardado === "true") {
+            listData.push(obj);
+            RememberOrders(JSON.stringify(listData));
+            navigation.navigate("pendientes");
+          }
+
           setIsvisibleLoading(false);
         })
         .catch((error) => {
           console.log("Error timeout");
+          setIsvisibleLoading(false);
           if (isNetworkError(error)) {
             console.log("Error Conexión: " + error);
-            AlertSignal();
+
+            var objOffline = {
+              carrier: carrierUser,
+              comuna: comuna,
+              direccion: direccion,
+              estado_entrega: selectedValueState,
+              fecha: fecha,
+              hora_gestion: hour,
+              gestion_usuario: user,
+              id_solicitudes_carrier_sac_estado: null,
+              latitud: resultGeo.coords.latitude,
+              longitud: resultGeo.coords.longitude,
+              manifiesto: manifiesto,
+              nombre_cliente: nombre_cliente,
+              observacion_sac: null,
+              pedido: pedido,
+              recibe_nombre: name ? name : "",
+              recibe_rut: rut ? rut : "",
+              ruta_firma: signature,
+              ruta_foto: localUri,
+              name_foto: filename,
+              type_foto: type,
+              solicitud: solicitud,
+              tipo_solicitud: tipo,
+              visto_proveedor: null,
+              tipo_despacho: tipo_despacho,
+              fecha_gestion: fecha_gestion,
+              observacion: observacion,
+            };
+            AlertSignal(objOffline);
             setIsvisibleLoading(false);
           }
         });
@@ -685,7 +842,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     backgroundColor: "#000000",
     color: "#d8d8d8",
-    // borderRadius: 10,
     borderWidth: 1,
   },
   containerListItem: {
@@ -734,10 +890,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     backgroundColor: "#f7c744",
-    paddingVertical: 15,
-    marginTop: 5,
+    paddingVertical: 25,
+    marginTop: 15,
     borderRadius: 15,
-    marginBottom: 38,
+    marginBottom: 28,
     width: "80%",
   },
   buttonText: {
@@ -745,6 +901,7 @@ const styles = StyleSheet.create({
     color: "rgb(32,53,70)",
     fontWeight: "bold",
     fontSize: 18,
+    marginTop: -15,
   },
   customer: {
     alignItems: "center",

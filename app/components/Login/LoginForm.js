@@ -73,15 +73,6 @@ export default function LoginForm(props) {
     })();
   }, []);
 
-  const removeTitle = async () => {
-    try {
-      await AsyncStorage.removeItem("@localStorage:credentials");
-      return true;
-    } catch (exception) {
-      return false;
-    }
-  };
-
   let text = "Waiting..";
   if (errorMsg) {
     text = errorMsg;
@@ -122,6 +113,19 @@ export default function LoginForm(props) {
     }
   };
 
+  rememberOffline = async () => {
+    try {
+      let offline = { vacio: "vacio" };
+      await AsyncStorage.setItem(
+        "@localStorage:offline",
+        JSON.stringify(offline)
+      );
+    } catch (error) {
+      console.log(error);
+      toastRef.current.show("Error al cargar offline");
+    }
+  };
+
   const login = async () => {
     setIsvisibleLoading(true);
 
@@ -151,6 +155,7 @@ export default function LoginForm(props) {
               toastRef.current.show("Credenciales inválidas");
             } else {
               rememberUser();
+              rememberOffline();
               navigation.navigate("manifests", {
                 carrier: response.data.carrier,
                 user: response.data.nom,
