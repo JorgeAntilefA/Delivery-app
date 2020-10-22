@@ -776,8 +776,8 @@ export default function ManageOrder(props) {
         })
         .then((response) => {
           if (response.data[0].guardado === "true") {
-            listData.push(obj);
-            RememberOrders(JSON.stringify(listData));
+            // listData.push(obj);
+            // RememberOrders(JSON.stringify(listData));
             navigation.navigate("pendientes");
           }
 

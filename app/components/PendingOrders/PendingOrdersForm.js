@@ -144,11 +144,11 @@ export default function PendingOrdersForm(props) {
   }
 
   async function fetchData() {
+    setRefreshing(true);
     const manifiestoRefresh = await AsyncStorage.getItem(
       "@localStorage:manifest"
     );
 
-    let insert = 0;
     db.transaction((tx) => {
       // sending 4 arguments in executeSql
       tx.executeSql(
@@ -179,11 +179,9 @@ export default function PendingOrdersForm(props) {
               params.append("recibe_rut", _array[x].recibe_rut);
               params.append("observacion", _array[x].observacion);
               params.append("tipo_despacho", _array[x].tipo_despacho);
-              // if (_array[x].ruta_firma !== null) {
-              // params.append("imgFirma", _array[x].ruta_firma);
-              //params.append("imgFirma", "");
-              // params.append("imgPedido", "");
-              // }
+              if (_array[x].ruta_firma !== null) {
+                params.append("imgFirma", _array[x].ruta_firma);
+              }
               if (_array[x].ruta_foto !== "") {
                 let type = _array[x].type_foto;
                 params.append("imgPedido", {
@@ -217,8 +215,10 @@ export default function PendingOrdersForm(props) {
                   //  }
                 });
             }
+            setRefreshing(false);
           } else {
             console.log("No hay datos offlines ");
+            setRefreshing(false);
           }
           //    }
         }
@@ -260,8 +260,8 @@ export default function PendingOrdersForm(props) {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     //setIsvisibleLoading(true);
-    let offline = await fetchData();
-    console.log("actualizando..");
+    // let offline = await fetchData();
+    // console.log("actualizando..");
     const manifiestoRefresh = await AsyncStorage.getItem(
       "@localStorage:manifest"
     );
@@ -298,7 +298,7 @@ export default function PendingOrdersForm(props) {
           );
           console.log(listData.length);
           setData(listData.slice(0, maxFila));
-          setDataTotal(listData.length - dataOffline);
+          setDataTotal(listData.length);
           setArrayholder(listData);
         }
 
@@ -429,7 +429,7 @@ export default function PendingOrdersForm(props) {
       <FAB
         style={styles.fab}
         label={dataOffline.toString()}
-        onPress={() => ValidateManifests()}
+        onPress={() => fetchData()}
       />
     );
   }
