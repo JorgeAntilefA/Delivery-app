@@ -43,12 +43,22 @@ export default function SignatureScreen(props) {
   };
   const handleSignature = (signature) => {
     setSignature(signature);
+    let rutF = rut;
+    var valor = rutF.replace(".", "");
+    // Despejar Guión
+    valor = valor.replace("-", "");
 
-    if (Fn.validaRut(rut)) {
+    // Aislar Cuerpo y Dígito Verificador
+    var cuerpo = valor.slice(0, -1);
+    var dv = valor.slice(-1).toUpperCase();
+
+    // Formatear RUN
+    rutF = cuerpo + "-" + dv;
+    if (Fn.validaRut(rutF)) {
       navigation.navigate("responseIncidents", {
         signature: signature,
         name: name,
-        rut: rut,
+        rut: rutF,
       });
     } else {
       toastRef.current.show("Rut ingresado es inválido");
@@ -82,7 +92,7 @@ export default function SignatureScreen(props) {
         placeholder="11111111-1"
         placeholderColor="#c4c3cb"
         value={rut}
-        onChange={(e) => checkRut(e.nativeEvent.text)}
+        onChange={(e) => setRut(e.nativeEvent.text)} //{(e) => checkRut(e.nativeEvent.text)}
       />
       <Signature
         onOK={handleSignature}

@@ -25,6 +25,7 @@ export default function SignatureScreen(props) {
   const [rut, setRut] = useState("");
   const toastRef = useRef();
   console.log(option);
+
   var Fn = {
     // Valida el rut con su cadena completa "XXXXXXXX-X"
     validaRut: function (rutCompleto) {
@@ -43,14 +44,25 @@ export default function SignatureScreen(props) {
       return S ? S - 1 : "k";
     },
   };
-  const handleSignature = (signature) => {
+  const handleSignature = async (signature) => {
     setSignature(signature);
+    let rutF = rut;
+    var valor = rutF.replace(".", "");
+    // Despejar Guión
+    valor = valor.replace("-", "");
 
-    if (Fn.validaRut(rut)) {
+    // Aislar Cuerpo y Dígito Verificador
+    var cuerpo = valor.slice(0, -1);
+    var dv = valor.slice(-1).toUpperCase();
+
+    // Formatear RUN
+    rutF = cuerpo + "-" + dv;
+
+    if (Fn.validaRut(rutF)) {
       navigation.navigate("modifyManagedOrder", {
         signature: signature,
         name: name,
-        rut: rut,
+        rut: rutF,
         direccion: direccion,
         pedido: pedido,
         nombre_cliente: nombre_cliente,
@@ -95,7 +107,7 @@ export default function SignatureScreen(props) {
         placeholder="11111111-1"
         placeholderColor="#c4c3cb"
         value={rut}
-        onChange={(e) => checkRut(e.nativeEvent.text)}
+        onChange={(e) => setRut(e.nativeEvent.text)} //{(e) => checkRut(e.nativeEvent.text)}
       />
       <Signature
         onOK={handleSignature}
@@ -114,7 +126,7 @@ export default function SignatureScreen(props) {
     </View>
   );
 
-  function checkRut(rut) {
+  async function checkRut(rut) {
     // Despejar Puntos
     var valor = rut.replace(".", "");
     // Despejar Guión
